@@ -1,43 +1,26 @@
 # Team Decision Log
 
-Update this with key decisions your team makes that you need to make...and 
-remember. The entries in this table are only examples. You may add, change, or
-delete these based on the needs of your team.
+Key decisions made by Team 32 during Chingu Voyage 61.
 
-To set this up add each teammates name in the `teammate name` column. Each 
-team member should Place an 'X' under their name to vote for the ideas 
-you like the best.
-
-| No. | Question/Option | Teammate name | Teammate name | Teammate name | Teammate name | Teammate name | Teammate name |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | Team meeting schedule | | | | | | |
-|   |	- Sprint Planning Sunday@9:00 a.m. CST | | | | | | |
-|   |	- Knowledge Xfer as needed | | | | | | |
-|   |	- Working Session Thursday@4:00 p.m. CST | | | | | | |
-| 2	| Project Backlog Tool | | | | | | |
-|   |	- Notion | | | | | | |
-|   |	- Jira | | | | | | |
-| 3	| Technical Stack (vote by adding your pref. in the cell under your name) | | | | | | |
-|   |	- BE Language | | | | | | |
-|   |	- FE Language | | | | | | |
-|   |	- FE Framework | | | | | | |
-|   |	- ML Framework | | | | | | |
-|   |	- Visualization/Graphics package (if required, e.g. D3, Nivo, etc.) | | | | | | |
-| 4	| Where to host the app? | | | | | | |
-|   |	- Heroku (suitable for FE, BE, & Postgres) | | | | | | |
-|   |	- Netlify (suitable only for FE) | | | | | | |
-|   |	- Vercel (suitable only for FE) | | | | | | |
-|   |	- Mongo Atlas (suitable only for MongoDB) | | | | | | |
-| 5	| BE/FE repos organization | | | | | | |
-|   |	- Separate GitHub repos for each | | | | | | |
-|   |	- Single GitHub repo for both | | | | | | |
-| 6	| Wireframing tool | | | | | | |
-|   |	- Paper & pencil | | | | | | |
-|   |	- Adobe XD | | | | | | |
-|   |	- Balsamiq | | | | | | |
-|   |	- Figma | | | | | | |
-| 7	| Who works in which part of the app? | | | | | | |
-|   | - BE (not applicable for Tier 1 teams) | | | | | | |
-|   |	- FE | | | | | | |
-| 8	| ... | | | | | | |
-| n | ... | | | | | | |
+| No. | Question / Decision | Answer / Decision Made |
+| :--- | :--- | :--- |
+| 1 | **Project** | ✅ FoodRescue — connecting surplus food to people who need it |
+| 2 | **Tech Stack — Frontend** | React + Tailwind CSS |
+| 3 | **Tech Stack — Backend** | Node.js + Express |
+| 4 | **Tech Stack — Database** | PostgreSQL + Prisma ORM |
+| 5 | **Tech Stack — Auth** | JWT + bcrypt (stateless, no vendor lock-in) |
+| 6 | **Tech Stack — Real-time** | Socket.io |
+| 7 | **Tech Stack — Maps** | Leaflet.js (free, no billing surprises) |
+| 8 | **Tech Stack — File Uploads** | Cloudinary (free tier, CDN delivery) |
+| 9 | **Tech Stack — AI (optional)** | Anthropic Claude API (food auto-categorisation) |
+| 10 | **Frontend Hosting** | Vercel (Git-integrated, free, instant previews) |
+| 11 | **Backend Hosting** | Supabase (managed PostgreSQL available) |
+| 12 | **Repo Organisation** | Monorepo — `client/` + `server/` in one repo |
+| 13 | **Team Roles** | Daniele — PM / Jedi Initiate; Jonathan — Frontend Lead; David — Backend Lead; Anderson — Backend/Data |
+| 14 | **Git Strategy** | `main` (prod) → `dev` (integration) → `feature/*`, `fix/*`, `chore/*` |
+| 15 | **Definition of Done** | Code reviewed by ≥1 teammate, no lint errors in CI, works on mobile + desktop, correct API status codes, merged to `dev` with green preview |
+| 16 | **Cron Job Frequency** | Every 5 minutes — auto-expire listings past `expiresAt` |
+| 17 | **JWT Expiry** | 7 days (refresh strategy deferred to v1.1) |
+| 18 | **Image Upload Limit** | 5MB max, compressed client-side before upload |
+| 19 | **Out of Scope (v1.0)** | Payments, native mobile app, multi-language, admin panel, social sharing |
+| 20 | **Sprint Duration** | 6 weeks (June 2026) |

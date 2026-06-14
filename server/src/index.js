@@ -21,11 +21,18 @@ app.use(express.json());
 
 // Root route for friendly browser testing
 app.get('/', (req, res) => {
-  res.send('Welcome to the FoodRescue API Server! 🥗 Go to /api-docs for documentation.');
+  res.send('Welcome to the FoodRescue API Server!  Go to /api-docs for documentation.');
 });
 
 // Swagger API Documentation Route
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+const CSS_URL = "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.3.0/swagger-ui.min.css";
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, { 
+  customCssUrl: CSS_URL,
+  customJs: [
+    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.3.0/swagger-ui-bundle.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.3.0/swagger-ui-standalone-preset.min.js"
+  ]
+}));
 
 /**
  * @swagger

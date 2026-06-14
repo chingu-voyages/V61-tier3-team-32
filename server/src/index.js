@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const { swaggerUi, specs } = require('./swagger');
+const specs = require('./swagger');
 
 const app = express();
 
@@ -33,15 +33,41 @@ app.get('/', (req, res) => {
   res.send('Welcome to the FoodRescue API Server!  Go to /api-docs for documentation.');
 });
 
-// Swagger API Documentation Route
-const CSS_URL = "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.3.0/swagger-ui.min.css";
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, { 
-  customCssUrl: CSS_URL,
-  customJs: [
-    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.3.0/swagger-ui-bundle.min.js",
-    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.3.0/swagger-ui-standalone-preset.min.js"
-  ]
-}));
+// Swagger API Documentation - serves UI from CDN (required for Vercel serverless)
+app.get('/api-docs/swagger.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(specs);
+});
+
+app.get('/api-docs', (req, res) => {
+  res.setHeader('Content-Type', 'text/html');
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <title>FoodRescue API Docs</title>
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui.min.css" />
+      </head>
+      <body>
+        <div id="swagger-ui"></div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-bundle.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-standalone-preset.min.js"></script>
+        <script>
+          window.onload = function () {
+            SwaggerUIBundle({
+              url: '/api-docs/swagger.json',
+              dom_id: '#swagger-ui',
+              presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+              layout: 'StandaloneLayout',
+            });
+          };
+        </script>
+      </body>
+    </html>
+  `);
+});
+
 
 /**
  * @swagger

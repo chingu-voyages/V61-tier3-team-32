@@ -52,5 +52,6 @@ FoodRescue is a real-time platform that connects **food donors** (restaurants, b
 - Jonathan: [GitHub](https://github.com/jnini2076e) 
 - David Akanang: [GitHub](https://github.com/DavidBugger) / [LinkedIn](https://linkedin.com/in/david-akanang-0789771a4)
 - Anderson: Developer
+- Ruthigwe Oruta: [GitHub](https://github.com/Xondacc) / [LinkedIn](https://linkedin.com/in/ruthigwe-oruta)
 
 

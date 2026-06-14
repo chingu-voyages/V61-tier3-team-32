@@ -3,11 +3,9 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const { createServer } = require('http');
-const { Server } = require('socket.io');
+const { swaggerUi, specs } = require('./swagger');
 
 const app = express();
-const httpServer = createServer(app);
 
 // Enable CORS for frontend
 app.use(cors({
@@ -19,27 +17,26 @@ app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json());
 
-// Socket.io setup
-const io = new Server(httpServer, {
-  cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
-    methods: ['GET', 'POST']
-  }
+// Supabase Realtime will be handled on the client side directly
+
+// Root route for friendly browser testing
+app.get('/', (req, res) => {
+  res.send('Welcome to the FoodRescue API Server! 🥗 Go to /api-docs for documentation.');
 });
 
-io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.id}`);
-  socket.on('disconnect', () => {
-    console.log(`User disconnected: ${socket.id}`);
-  });
-});
+// Swagger API Documentation Route
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
-// Pass io to routes if needed
-app.use((req, res, next) => {
-  req.io = io;
-  next();
-});
-
+/**
+ * @swagger
+ * /api/health:
+ *   get:
+ *     summary: API Healthcheck
+ *     description: Returns the status of the API
+ *     responses:
+ *       200:
+ *         description: Successful response
+ */
 // Basic Healthcheck
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'FoodRescue API is running' });
@@ -52,7 +49,12 @@ app.get('/api/health', (req, res) => {
 // app.use('/api/users', require('./routes/users'));
 // app.use('/api/stats', require('./routes/stats'));
 
-const PORT = process.env.PORT || 5000;
-httpServer.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+// Export the Express API for Vercel Serverless
+module.exports = app;

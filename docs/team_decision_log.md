@@ -9,7 +9,7 @@ Key decisions made by Team 32 during Chingu Voyage 61.
 | 3 | **Tech Stack — Backend** | Node.js + Express |
 | 4 | **Tech Stack — Database** | PostgreSQL + Prisma ORM |
 | 5 | **Tech Stack — Auth** | JWT + bcrypt (stateless, no vendor lock-in) |
-| 6 | **Tech Stack — Real-time** | Socket.io |
+| 6 | **Tech Stack — Real-time** | Supabase Realtime (Serverless-compatible) |
 | 7 | **Tech Stack — Maps** | Leaflet.js (free, no billing surprises) |
 | 8 | **Tech Stack — File Uploads** | Cloudinary (free tier, CDN delivery) |
 | 9 | **Tech Stack — AI (optional)** | Anthropic Claude API (food auto-categorisation) |

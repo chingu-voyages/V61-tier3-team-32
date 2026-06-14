@@ -121,4 +121,4 @@ git push -u origin feature/login-page
 - **"Connection refused" or API errors** -> Check your `.env` file and make sure the `DATABASE_URL` is correct.
 - **"Port 5000 / 5173 is already in use"** -> You have another terminal window running the app. Close it or stop the process (Ctrl+C).
 
-Happy Coding! 🚀
+Happy Coding! 

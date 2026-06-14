@@ -11,7 +11,7 @@ FoodRescue is a real-time platform that connects **food donors** (restaurants, b
 - **Backend**: Node.js + Express (Hosted as Vercel Serverless Functions)
 - **Database**: PostgreSQL + Prisma (Hosted on Supabase)
 - **Authentication**: Custom JWT + bcrypt
-- **Real-time**: Socket.io
+- **Real-time**: Supabase Realtime
 - **Maps**: Leaflet.js
 - **File Uploads**: Cloudinary
 
@@ -52,3 +52,5 @@ FoodRescue is a real-time platform that connects **food donors** (restaurants, b
 - Jonathan: [GitHub](https://github.com/jnini2076e) 
 - David Akanang: [GitHub](https://github.com/DavidBugger) / [LinkedIn](https://linkedin.com/in/david-akanang-0789771a4)
 - Anderson: Developer
+
+

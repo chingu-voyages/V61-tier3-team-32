@@ -14,7 +14,7 @@ const options = {
         description: 'Development server',
       },
       {
-        url: 'https://foodrescue-server.vercel.app',
+        url: 'https://foodrescue-deploy-server.vercel.app',
         description: 'Production server',
       }
     ],
@@ -27,14 +27,90 @@ const options = {
         },
       },
     },
-    security: [
-      {
-        bearerAuth: [],
+    security: [{ bearerAuth: [] }],
+    // API paths defined inline for cross-platform/Vercel compatibility
+    paths: {
+      '/api/health': {
+        get: {
+          summary: 'API Healthcheck',
+          description: 'Returns the current status of the API server',
+          tags: ['System'],
+          security: [],
+          responses: {
+            200: {
+              description: 'API is running successfully',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      status: { type: 'string', example: 'ok' },
+                      message: { type: 'string', example: 'FoodRescue API is running' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
-    ],
+      '/api/auth/register': {
+        post: {
+          summary: 'Register a new user',
+          tags: ['Auth'],
+          security: [],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['name', 'email', 'password', 'role'],
+                  properties: {
+                    name: { type: 'string', example: 'David Akanang' },
+                    email: { type: 'string', example: 'david@example.com' },
+                    password: { type: 'string', example: 'securepassword123' },
+                    role: { type: 'string', enum: ['donor', 'claimer'] },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            201: { description: 'User registered successfully' },
+            400: { description: 'Validation error or user already exists' },
+          },
+        },
+      },
+      '/api/auth/login': {
+        post: {
+          summary: 'Login an existing user',
+          tags: ['Auth'],
+          security: [],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['email', 'password'],
+                  properties: {
+                    email: { type: 'string', example: 'david@example.com' },
+                    password: { type: 'string', example: 'securepassword123' },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            200: { description: 'Login successful, returns JWT token' },
+            401: { description: 'Invalid credentials' },
+          },
+        },
+      },
+    },
   },
-  // Paths to files containing OpenAPI definitions
-  apis: ['./src/routes/*.js', './src/index.js'],
+  apis: [], // paths are defined inline above, no file scanning needed
 };
 
 const specs = swaggerJsdoc(options);

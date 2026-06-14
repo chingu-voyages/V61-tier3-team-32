@@ -13,7 +13,16 @@ app.use(cors({
   methods: ['GET', 'POST', 'PATCH', 'DELETE'],
 }));
 
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "cdnjs.cloudflare.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "cdnjs.cloudflare.com"],
+      imgSrc: ["'self'", "data:", "validator.swagger.io"],
+    },
+  },
+}));
 app.use(morgan('dev'));
 app.use(express.json());
 

@@ -1,0 +1,43 @@
+import { UtensilsCrossed, LogIn, UserPlus } from 'lucide-react'
+
+const Header = () => {
+  return (
+    <header className="text-black md:p-4 p-3 shadow-md w-full overflow-x-auto scrollbar-hide">
+      <div className="flex justify-center items-center gap-6 whitespace-nowrap min-w-max mx-auto px-4">
+        
+        {/* Logo group */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="h-8 w-8 rounded-full text-white bg-primary place-items-center grid">
+            <UtensilsCrossed className="w-5 h-5" />
+          </div>
+          <span className="text-primary font-bold text-sm md:text-xl">FoodRescue</span>
+        </div>
+
+        {/* Nav group */}
+        <div className="flex flex-row items-center md:text-md text-sm gap-4 flex-shrink-0">
+          <a href="#how-it-works" className="hover:text-primary hover:font-bold">How it works</a>
+          <a href="#live-feed" className="hover:text-primary hover:font-bold">Live feed</a>
+          <a href="#impact" className="hover:text-primary hover:font-bold">Impact</a>
+          <a href="#communities" className="hover:text-primary hover:font-bold">Communities</a>
+          <div className="flex items-center font-bold p-1 hover:rounded-md md:gap-4 gap-2">
+            <button className="flex items-center font-bold hover:bg-slate-200 p-1 md:p-1.5 hover:rounded-md gap-2">
+              <LogIn className="w-5 h-5" />
+              <span>Login</span>
+            </button>
+            <button className="flex items-center font-bold hover:bg-green-100 p-1 md:p-1.5 rounded-md gap-2 border border-primary">
+              <UserPlus className="w-5 h-5" />
+              <span>Sign up</span>
+            </button>
+            <button className="flex items-center gap-2 rounded-md bg-primary p-1 md:p-1.5 text-white hover:font-bold hover:bg-green-900">
+              <UtensilsCrossed className="w-5 h-5" />
+              <span>Post food</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </header>
+  )
+}
+
+export default Header

@@ -7,3 +7,6 @@
     @apply antialiased;
   }
 }
+header::-webkit-scrollbar {
+  display: none;
+}

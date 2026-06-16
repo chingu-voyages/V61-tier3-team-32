@@ -4,7 +4,8 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen bg-light-gray text-dark">
-        <header className="bg-primary text-white p-4 shadow-md flex justify-between items-center">
+        <header className="bg-primary text-white p-4 shadow-md flex  items-center">
+     
           <h1 className="text-2xl font-bold">FoodRescue</h1>
           <nav>
             <span className="cursor-pointer font-medium hover:text-primary-light">Login / Sign Up</span>

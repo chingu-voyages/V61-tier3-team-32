@@ -9,13 +9,13 @@ const generateToken = (userId, role) => {
   });
 };
 
-const register = async (req, res) => {
+const signup = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, city } = req.body;
 
   try {
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -31,7 +31,8 @@ const register = async (req, res) => {
         name,
         email,
         passwordHash,
-        role
+        role,
+        city
       }
     });
 
@@ -39,7 +40,7 @@ const register = async (req, res) => {
 
     res.status(201).json({
       message: 'User created successfully',
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, city: user.city },
       token
     });
   } catch (error) {
@@ -71,7 +72,7 @@ const login = async (req, res) => {
 
     res.json({
       message: 'Logged in successfully',
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, city: user.city },
       token
     });
   } catch (error) {
@@ -80,4 +81,12 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+const logout = (req, res) => {
+  res.json({ message: 'Logged out successfully. Please remove token from client.' });
+};
+
+const getMe = (req, res) => {
+  res.json({ user: req.user });
+};
+
+module.exports = { signup, login, logout, getMe };

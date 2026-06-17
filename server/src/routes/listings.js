@@ -3,11 +3,13 @@ const { verifyToken, isDonor, isClaimer } = require('../middleware/auth.middlewa
 const {
   getListings,
   createListing,
+  uploadListingPhoto,
   updateListing,
   deleteListing,
   getMyListings
 } = require('../controllers/listings.controller');
 const { createClaim, getListingClaims } = require('../controllers/claims.controller');
+const { singleImageUpload } = require('../middleware/upload.middleware');
 
 const router = express.Router();
 
@@ -62,6 +64,38 @@ router.get('/mine', verifyToken, isDonor, getMyListings);
  *         description: Listing created
  */
 router.post('/', verifyToken, isDonor, createListing);
+
+/**
+ * @swagger
+ * /api/listings/{id}/photo:
+ *   post:
+ *     summary: Upload a photo for an owned listing
+ *     tags: [Listings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - photo
+ *             properties:
+ *               photo:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Listing photo uploaded
+ */
+router.post('/:id/photo', verifyToken, isDonor, singleImageUpload('photo'), uploadListingPhoto);
 
 /**
  * @swagger

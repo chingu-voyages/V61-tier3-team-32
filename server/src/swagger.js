@@ -302,7 +302,6 @@ const options = {
                     title: { type: 'string', example: 'Fresh bread and pastries' },
                     category: { type: 'string', example: 'Bakery' },
                     description: { type: 'string', example: 'Surplus bread from today' },
-                    photoUrl: { type: 'string', example: 'https://example.com/photo.jpg' },
                     quantity: { type: 'string', example: '3 trays' },
                     latitude: { type: 'number', example: 6.5244 },
                     longitude: { type: 'number', example: 3.3792 },
@@ -434,6 +433,61 @@ const options = {
             403: { description: 'Not authorized to delete this listing' },
             404: { description: 'Listing not found' },
             500: { description: 'Server error deleting listing' },
+          },
+        },
+      },
+      '/api/listings/{id}/photo': {
+        post: {
+          summary: 'Upload a photo for an owned listing',
+          description: 'Uploads an image to Supabase Storage and updates the listing photoUrl.',
+          tags: ['Listings'],
+          parameters: [
+            {
+              in: 'path',
+              name: 'id',
+              required: true,
+              schema: { type: 'string', format: 'uuid' },
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              'multipart/form-data': {
+                schema: {
+                  type: 'object',
+                  required: ['photo'],
+                  properties: {
+                    photo: {
+                      type: 'string',
+                      format: 'binary',
+                      description: 'JPEG, PNG, or WebP image up to 5MB',
+                    },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: 'Listing photo uploaded',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      message: { type: 'string', example: 'Listing photo uploaded successfully' },
+                      photoUrl: { type: 'string', example: 'https://your-project.supabase.co/storage/v1/object/public/listing-photos/listings/id/photo.jpg' },
+                      listing: { $ref: '#/components/schemas/Listing' },
+                    },
+                  },
+                },
+              },
+            },
+            400: { description: 'Missing, oversized, or unsupported image file' },
+            401: { description: 'Missing or invalid token' },
+            403: { description: 'Not authorized to update this listing' },
+            404: { description: 'Listing not found' },
+            500: { description: 'Server error uploading listing photo' },
           },
         },
       },

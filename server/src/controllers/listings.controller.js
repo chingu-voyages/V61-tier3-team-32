@@ -1,4 +1,22 @@
 const prisma = require('../lib/prisma');
+const { getSupabaseClient } = require('../lib/supabase');
+
+const listingPhotoBucket = process.env.SUPABASE_LISTING_PHOTOS_BUCKET || 'listing-photos';
+
+const uploadErrorResponse = (message, error) => {
+  const response = { message };
+
+  if (process.env.NODE_ENV !== 'production' && error) {
+    response.details = error.message || String(error);
+  }
+
+  return response;
+};
+
+const getFileExtension = (filename = '') => {
+  const extension = filename.split('.').pop();
+  return extension && extension !== filename ? extension.toLowerCase() : 'jpg';
+};
 
 const getListings = async (req, res) => {
   const { city } = req.query;
@@ -32,7 +50,8 @@ const getListings = async (req, res) => {
 
 const createListing = async (req, res) => {
   try {
-    const data = { ...req.body, donorId: req.user.id };
+    const { photoUrl, ...listingData } = req.body;
+    const data = { ...listingData, donorId: req.user.id };
     
     if (data.expiresAt) data.expiresAt = new Date(data.expiresAt);
     if (data.pickupStart) data.pickupStart = new Date(data.pickupStart);
@@ -43,6 +62,60 @@ const createListing = async (req, res) => {
   } catch (error) {
     console.error('Create Listing Error:', error);
     res.status(500).json({ message: 'Server error creating listing' });
+  }
+};
+
+const uploadListingPhoto = async (req, res) => {
+  const { id } = req.params;
+
+  if (!req.file) {
+    return res.status(400).json({ message: 'Photo file is required' });
+  }
+
+  try {
+    const listing = await prisma.listing.findUnique({ where: { id } });
+    if (!listing) return res.status(404).json({ message: 'Listing not found' });
+    if (listing.donorId !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to update this listing' });
+    }
+
+    const supabase = getSupabaseClient();
+    const extension = getFileExtension(req.file.originalname);
+    const filePath = `listings/${id}/${Date.now()}.${extension}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(listingPhotoBucket)
+      .upload(filePath, req.file.buffer, {
+        contentType: req.file.mimetype,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error('Supabase Upload Error:', uploadError);
+      return res
+        .status(500)
+        .json(uploadErrorResponse('Server error uploading listing photo', uploadError));
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from(listingPhotoBucket)
+      .getPublicUrl(filePath);
+
+    const updatedListing = await prisma.listing.update({
+      where: { id },
+      data: { photoUrl: publicUrlData.publicUrl },
+    });
+
+    res.json({
+      message: 'Listing photo uploaded successfully',
+      photoUrl: updatedListing.photoUrl,
+      listing: updatedListing,
+    });
+  } catch (error) {
+    console.error('Upload Listing Photo Error:', error);
+    res
+      .status(500)
+      .json(uploadErrorResponse('Server error uploading listing photo', error));
   }
 };
 
@@ -100,6 +173,7 @@ const getMyListings = async (req, res) => {
 module.exports = {
   getListings,
   createListing,
+  uploadListingPhoto,
   updateListing,
   deleteListing,
   getMyListings

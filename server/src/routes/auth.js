@@ -36,14 +36,14 @@ const router = express.Router();
  *                 enum: [donor, claimer]
  *     responses:
  *       201:
- *         description: User registered successfully
+ *         description: User registered successfully. Sets an httpOnly refresh token cookie and returns a short-lived access token.
  *       400:
  *         description: Validation error or user exists
  */
 router.post('/signup', [
   body('name').notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Valid email is required'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   body('role').isIn(['donor', 'claimer']).withMessage('Role must be donor or claimer')
 ], signup);
 
@@ -69,7 +69,7 @@ router.post('/signup', [
  *                 type: string
  *     responses:
  *       200:
- *         description: Logged in successfully
+ *         description: Logged in successfully. Sets an httpOnly refresh token cookie and returns a short-lived access token.
  *       401:
  *         description: Invalid credentials
  */

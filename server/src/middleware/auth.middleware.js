@@ -1,24 +1,49 @@
-const { verifyAccessToken } = require("../lib/tokens");
+const jwt = require('jsonwebtoken');
+const prisma = require('../lib/prisma');
 
-// Protects a route by requiring a valid, non-expired access token in the
-// Authorization header. On success, attaches { id, role } to req.user.
-// Expired tokens deliberately return 401 (not a refresh) — refreshing is
-// the client's job, via /api/auth/refresh.
-function requireAuth(req, res, next) {
-  const header = req.headers.authorization;
-  if (!header || !header.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "No access token provided" });
+const verifyToken = async (req, res, next) => {
+  let token;
+
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
   }
 
-  const token = header.slice("Bearer ".length);
+  if (!token) {
+    return res.status(401).json({ message: 'Not authorized, no token' });
+  }
 
   try {
-    const payload = verifyAccessToken(token);
-    req.user = { id: payload.id, role: payload.role };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    req.user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: { id: true, name: true, email: true, role: true, city: true, latitude: true, longitude: true }
+    });
+
+    if (!req.user) {
+      return res.status(401).json({ message: 'Not authorized, user not found' });
+    }
+
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Access token invalid or expired" });
+    console.error('Token verification error:', error);
+    res.status(401).json({ message: 'Not authorized, token failed' });
   }
-}
+};
 
-module.exports = { requireAuth };
+const isDonor = (req, res, next) => {
+  if (req.user && req.user.role === 'donor') {
+    next();
+  } else {
+    res.status(403).json({ message: 'Not authorized as a donor' });
+  }
+};
+
+const isClaimer = (req, res, next) => {
+  if (req.user && req.user.role === 'claimer') {
+    next();
+  } else {
+    res.status(403).json({ message: 'Not authorized as a claimer' });
+  }
+};
+
+module.exports = { verifyToken, isDonor, isClaimer };

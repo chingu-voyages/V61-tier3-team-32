@@ -1,33 +1,24 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { UtensilsCrossed, LogIn, LogOut, UserPlus, LayoutDashboard, ChefHat } from 'lucide-react'
-import AuthModal from './AuthModal'
+import { UtensilsCrossed, LogIn, LogOut, UserPlus, LayoutDashboard, ChefHat, ShoppingBasket } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
+import LoginModal from './auth/LoginModal'
+import SignupModal from './auth/SignupModal'
 
-const Header = ({ user, onAuthSuccess }) => {
-  const [authOpen, setAuthOpen] = useState(false)
-  const [authMode, setAuthMode] = useState('login')
+const Header = () => {
+  const { user, isAuthenticated, logout } = useAuth()
+  const [authMode, setAuthMode] = useState(null) // null | 'login' | 'signup'
   const location = useLocation()
   const navigate = useNavigate()
-  const isDashboard = location.pathname === '/dashboard'
 
-  useEffect(() => {
-    if (isDashboard && !user) {
-      onAuthSuccess({ id: 'poster-ruth', firstName: 'Ruth', role: 'poster' })
-    }
-  }, [isDashboard, user, onAuthSuccess])
+  const dashboardPath = user?.role === 'donor' ? '/posterdashboard' : '/claimdashboard'
+  const isDashboard = location.pathname === dashboardPath
 
-  const openAuth = (mode) => {
-    setAuthMode(mode)
-    setAuthOpen(true)
-  }
+  const openAuth = (mode) => setAuthMode(mode)
+  const closeAuth = () => setAuthMode(null)
 
-  const handleAuthSuccess = (authedUser) => {
-    onAuthSuccess(authedUser)
-    setAuthOpen(false)
-  }
-
-  const handleLogout = () => {
-    onAuthSuccess(null)
+  const handleLogout = async () => {
+    await logout()
     navigate('/')
   }
 
@@ -52,10 +43,14 @@ const Header = ({ user, onAuthSuccess }) => {
 
           {isDashboard ? (
             <div className="flex items-center gap-3">
-              <ChefHat className="w-5 h-5 text-primary" />
-              <span className="font-semibold">Hi, {user?.firstName ?? 'Ruth'}</span>
+              {user?.role === 'donor' ? (
+                <ChefHat className="w-5 h-5 text-primary" />
+              ) : (
+                <ShoppingBasket className="w-5 h-5 text-primary" />
+              )}
+              <span className="font-semibold">Hi, {user?.name?.split(' ')[0]}</span>
               <span className="rounded-md bg-primary-light px-2 py-1 text-xs font-bold uppercase tracking-wide text-primary">
-                Poster
+                {user?.role === 'donor' ? 'Poster' : 'Claimer'}
               </span>
               <button
                 onClick={handleLogout}
@@ -69,11 +64,11 @@ const Header = ({ user, onAuthSuccess }) => {
                 <span>Post food</span>
               </button>
             </div>
-          ) : user ? (
+          ) : isAuthenticated ? (
             <div className="flex items-center gap-4">
-              <span className="font-semibold">Hey {user.firstName}</span>
+              <span className="font-semibold">Hey {user?.name?.split(' ')[0]}</span>
               <Link
-                to="/posterdashboard"
+                to={dashboardPath}
                 className="flex items-center gap-2 rounded-md border border-primary p-1 md:p-1.5 font-bold hover:bg-primary-light"
               >
                 <LayoutDashboard className="w-5 h-5" />
@@ -110,13 +105,21 @@ const Header = ({ user, onAuthSuccess }) => {
 
       </div>
 
-      <AuthModal
-        open={authOpen}
-        mode={authMode}
-        onModeChange={setAuthMode}
-        onClose={() => setAuthOpen(false)}
-        onSuccess={handleAuthSuccess}
-      />
+      {authMode === 'login' && (
+        <LoginModal
+          onClose={closeAuth}
+          onSwitchToSignup={() => openAuth('signup')}
+          onSuccess={closeAuth}
+        />
+      )}
+
+      {authMode === 'signup' && (
+        <SignupModal
+          onClose={closeAuth}
+          onSwitchToLogin={() => openAuth('login')}
+          onSuccess={closeAuth}
+        />
+      )}
     </header>
   )
 }

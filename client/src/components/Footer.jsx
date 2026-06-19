@@ -26,10 +26,10 @@ const Footer = () => {
             </p>
             <ul className="mt-3 grid grid-cols-2 gap-x-8 gap-y-1 text-sm text-gray-700 sm:grid-cols-3">
               {[
-                { name: "Ruth Oruta", github: "https://github.com/ruthigwaoruta" },
+                { name: "Ruth Oruta", github: "https://github.com/Xondacc" },
                 { name: "Daniel", github: "https://github.com/dk-afriyie" },
                 { name: "Devdave", github: "https://github.com/davidbugger" },
-                { name: "Bathshua", github: "https://github.com/Bathshua" },
+                { name: "Bathshua", github: "https://github.com/Awsomgal" },
                 { name: "Alwyn", github: "https://github.com/awyyyn" },
                 { name: "Anderson", github: "https://github.com/andemosa" },
                 { name: "Jonathan Padilla", github: "https://github.com/jnini2076" },

@@ -10,6 +10,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import { mockPosterListings, mockPosterStats } from '../data/mockData'
+import { useAuth } from '../context/AuthContext'
 
 function urgencyClass(status, minutesLeft) {
   if (status === 'expired' || minutesLeft <= 0) return 'bg-danger text-white'
@@ -25,9 +26,10 @@ function countdownLabel(status, minutesLeft) {
   return minutes ? `${hours}h ${minutes}m left` : `${hours}h left`
 }
 
-const PosterDashboard = ({ user }) => {
+const PosterDashboard = () => {
+  const { user } = useAuth()
   const [listings, setListings] = useState(mockPosterListings)
-  const firstName = user?.firstName ?? 'Jonathan'
+  const firstName = user?.name?.split(' ')[0] ?? ''
 
   const cancelListing = (id) => {
     setListings((prev) => prev.filter((listing) => listing.id !== id))

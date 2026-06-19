@@ -12,11 +12,11 @@ function NavAuth({ onOpenLogin, onOpenSignup }) {
     return <div className="h-8 w-32" />;
   }
 
-  const firstName = user.name?.split(" ")[0] ?? "";
-  const displayName =
-    firstName.length > 5 ? `${firstName.slice(0, 5)}...` : firstName;
-
   if (isAuthenticated) {
+    const firstName = user.name?.split(" ")[0] ?? "";
+    const displayName =
+      firstName.length > 5 ? `${firstName.slice(0, 5)}...` : firstName;
+
     return (
       <div className="flex items-center gap-3">
         <span className="font-medium">Hi, {displayName}</span>
@@ -29,6 +29,7 @@ function NavAuth({ onOpenLogin, onOpenSignup }) {
       </div>
     );
   }
+  
   return (
     <div className="flex items-center gap-3">
       <button

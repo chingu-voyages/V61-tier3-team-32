@@ -26,15 +26,24 @@ const Footer = () => {
             </p>
             <ul className="mt-3 grid grid-cols-2 gap-x-8 gap-y-1 text-sm text-gray-700 sm:grid-cols-3">
               {[
-                "Ruth Oruta",
-                "Daniel",
-                "Devdave",
-                "Bathshua",
-                "Alwyn",
-                "Anderson",
-                "Jonathan Padilla",
-              ].map((name) => (
-                <li key={name} className="py-0.5">{name}</li>
+                { name: "Ruth Oruta", github: "https://github.com/ruthigwaoruta" },
+                { name: "Daniel", github: "https://github.com/dk-afriyie" },
+                { name: "Devdave", github: "https://github.com/davidbugger" },
+                { name: "Bathshua", github: "https://github.com/Bathshua" },
+                { name: "Alwyn", github: "https://github.com/awyyyn" },
+                { name: "Anderson", github: "https://github.com/andemosa" },
+                { name: "Jonathan Padilla", github: "https://github.com/jnini2076" },
+              ].map(({ name, github }) => (
+                <li key={name} className="py-0.5">
+                  <a
+                    href={github}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-primary hover:underline"
+                  >
+                    {name}
+                  </a>
+                </li>
               ))}
             </ul>
           </div>

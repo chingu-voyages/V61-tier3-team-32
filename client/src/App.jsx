@@ -14,7 +14,7 @@ function App() {
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<div className="p-6">Home Page</div>} />
-            <Route path="/dashboard" element={<PosterDashboard user={user} />} />
+            <Route path="/posterdashboard" element={<PosterDashboard user={user} />} />
           </Routes>
         </main>
         <Footer />

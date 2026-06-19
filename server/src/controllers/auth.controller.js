@@ -30,13 +30,13 @@ async function issueTokens(res, user) {
   return accessToken;
 }
 
-const register = async (req, res) => {
+const signup = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, city } = req.body;
 
   try {
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -55,20 +55,16 @@ const register = async (req, res) => {
         email,
         passwordHash,
         role,
-      },
+        city
+      }
     });
 
     const accessToken = await issueTokens(res, user);
 
     res.status(201).json({
-      message: "User created successfully",
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-      accessToken,
+      message: 'User created successfully',
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, city: user.city },
+      token
     });
   } catch (error) {
     console.error("Registration Error:", error);
@@ -98,14 +94,9 @@ const login = async (req, res) => {
     const accessToken = await issueTokens(res, user);
 
     res.json({
-      message: "Logged in successfully",
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-      accessToken,
+      message: 'Logged in successfully',
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, city: user.city },
+      token
     });
   } catch (error) {
     console.error("Login Error:", error);
@@ -204,4 +195,12 @@ const logout = async (req, res) => {
   res.json({ message: "Logged out successfully" });
 };
 
-module.exports = { register, login, refresh, logout };
+const logout = (req, res) => {
+  res.json({ message: 'Logged out successfully. Please remove token from client.' });
+};
+
+const getMe = (req, res) => {
+  res.json({ user: req.user });
+};
+
+module.exports = { signup, login, logout, getMe };

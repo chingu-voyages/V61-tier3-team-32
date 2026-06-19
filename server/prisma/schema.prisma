@@ -35,6 +35,7 @@ model User {
   // or use raw queries if strictly PostGIS is required.
   latitude     Float?
   longitude    Float?
+  city         String?  @db.VarChar(100)
   createdAt    DateTime @default(now())
 
   // Relations
@@ -54,6 +55,7 @@ model Listing {
   quantity    String        @db.VarChar(50)
   latitude    Float?
   longitude   Float?
+  city        String?       @db.VarChar(100)
   address     String?       @db.Text
   expiresAt   DateTime
   pickupStart DateTime

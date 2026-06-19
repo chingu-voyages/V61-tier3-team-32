@@ -93,11 +93,11 @@ app.get("/api/health", (req, res) => {
 });
 
 // Routes
-app.use("/api/auth", require("./routes/auth"));
-// app.use('/api/listings', require('./routes/listings'));
-// app.use('/api/claims', require('./routes/claims'));
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/listings', require('./routes/listings'));
+app.use('/api/claims', require('./routes/claims'));
+app.use('/api/stats', require('./routes/stats'));
 // app.use('/api/users', require('./routes/users'));
-// app.use('/api/stats', require('./routes/stats'));
 
 if (process.env.NODE_ENV !== "production") {
   const PORT = process.env.PORT || 5000;

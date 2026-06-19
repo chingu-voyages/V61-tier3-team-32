@@ -73,7 +73,7 @@ const Header = ({ user, onAuthSuccess }) => {
             <div className="flex items-center gap-4">
               <span className="font-semibold">Hey {user.firstName}</span>
               <Link
-                to="/dashboard"
+                to="/posterdashboard"
                 className="flex items-center gap-2 rounded-md border border-primary p-1 md:p-1.5 font-bold hover:bg-primary-light"
               >
                 <LayoutDashboard className="w-5 h-5" />

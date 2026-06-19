@@ -27,7 +27,7 @@ function countdownLabel(status, minutesLeft) {
 
 const PosterDashboard = ({ user }) => {
   const [listings, setListings] = useState(mockPosterListings)
-  const firstName = user?.firstName ?? 'Ruth'
+  const firstName = user?.firstName ?? 'Jonathan'
 
   const cancelListing = (id) => {
     setListings((prev) => prev.filter((listing) => listing.id !== id))

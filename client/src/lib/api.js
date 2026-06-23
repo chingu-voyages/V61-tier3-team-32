@@ -32,7 +32,7 @@ api.interceptors.response.use(
     // These should NOT trigger a refresh attempt
     const isAuthRequest =
       config?.url?.includes("/auth/login") ||
-      config?.url?.includes("/auth/register") ||
+      config?.url?.includes("/auth/signup") ||
       config?.url?.includes("/auth/refresh");
 
     // Only attempt refresh for 401 errors that:

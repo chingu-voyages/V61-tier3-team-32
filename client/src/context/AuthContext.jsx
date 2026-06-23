@@ -50,21 +50,22 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  const register = useCallback(async ({ name, email, password, role }) => {
-    const { data } = await api.post("/auth/register", {
+  const register = useCallback(async ({ name, email, password, role, city }) => {
+    const { data } = await api.post("/auth/signup", {
       name,
       email,
       password,
       role,
+      city,
     });
-    setAccessToken(data.accessToken);
+    setAccessToken(data.token);
     setUser(data.user);
     return data.user;
   }, []);
 
   const login = useCallback(async ({ email, password }) => {
     const { data } = await api.post("/auth/login", { email, password });
-    setAccessToken(data.accessToken);
+    setAccessToken(data.token);
     setUser(data.user);
     return data.user;
   }, []);

@@ -1,13 +1,27 @@
 import { useState } from "react";
-import { X, UserPlus, ChefHat, ShoppingBasket } from "lucide-react";
+import { X, UserPlus, ChefHat, ShoppingBasket, Eye, EyeOff } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
+
+const NIGERIAN_CITIES = [
+  "Lagos",
+  "Abuja",
+  "Port Harcourt",
+  "Kano",
+  "Ibadan",
+  "Abeokuta",
+  "Enugu",
+  "Kaduna",
+  "Benin City",
+  "Jos"
+];
 
 const initialFormState = {
   name: "",
   email: "",
   password: "",
   role: "claimer",
+  city: "Lagos",
 };
 
 export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
@@ -15,6 +29,7 @@ export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
   const [form, setForm] = useState(initialFormState);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const updateField = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
@@ -111,11 +126,10 @@ export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
               <button
                 type="button"
                 onClick={selectRole("donor")}
-                className={`rounded-xl border p-3 text-left transition ${
-                  form.role === "donor"
-                    ? "border-primary bg-primary-light"
-                    : "border-gray-200 bg-white"
-                }`}
+                className={`rounded-xl border p-3 text-left transition ${form.role === "donor"
+                  ? "border-primary bg-primary-light"
+                  : "border-gray-200 bg-white"
+                  }`}
               >
                 <ChefHat className="h-5 w-5 text-dark mb-1" />
                 <p className="font-semibold text-sm text-dark">Post food</p>
@@ -126,11 +140,10 @@ export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
               <button
                 type="button"
                 onClick={selectRole("claimer")}
-                className={`rounded-xl border p-3 text-left transition ${
-                  form.role === "claimer"
-                    ? "border-primary bg-primary-light"
-                    : "border-gray-200 bg-white"
-                }`}
+                className={`rounded-xl border p-3 text-left transition ${form.role === "claimer"
+                  ? "border-primary bg-primary-light"
+                  : "border-gray-200 bg-white"
+                  }`}
               >
                 <ShoppingBasket className="h-5 w-5 text-dark mb-1" />
                 <p className="font-semibold text-sm text-dark">Claim food</p>
@@ -163,14 +176,45 @@ export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
             >
               Password *
             </label>
-            <input
-              id="password"
-              type="password"
-              value={form.password}
-              onChange={updateField("password")}
-              placeholder="At least 8 characters"
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={form.password}
+                onChange={updateField("password")}
+                placeholder="At least 8 characters"
+                className="w-full rounded-lg border border-gray-200 bg-light-gray px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-primary"
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-dark transition"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="city"
+              className="block text-sm font-medium text-dark mb-1"
+            >
+              City *
+            </label>
+            <select
+              id="city"
+              value={form.city}
+              onChange={updateField("city")}
               className="w-full rounded-lg border border-gray-200 bg-light-gray px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-primary"
-            />
+            >
+              {NIGERIAN_CITIES.map((city) => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
+            </select>
           </div>
 
           {error && (

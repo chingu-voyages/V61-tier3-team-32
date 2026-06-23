@@ -7,6 +7,7 @@ import LoginModal from "../auth/LoginModal";
 import SignupModal from "../auth/SignupModal";
 import Home from "../../pages/Home";
 import ResetPassword from "../../pages/ResetPassword";
+import PosterDashboard from "../../pages/PosterDashboard";
 
 function NavAuth({ onOpenLogin, onOpenSignup, isMobile = false }) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
@@ -190,9 +191,10 @@ function AppShell() {
 
       {/* Main Content */}
       <main>
-        <Routes>
+          <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/dashboard" element={<PosterDashboard />} />
         </Routes>
       </main>
 

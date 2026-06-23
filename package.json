@@ -1,0 +1,18 @@
+{
+  "name": "foodrescue",
+  "version": "1.0.0",
+  "description": "FoodRescue - Connecting surplus food to people who need it",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=client\" \"npm run dev --workspace=server\"",
+    "build:client": "npm run build --workspace=client",
+    "install:all": "npm install && npm install --workspace=client && npm install --workspace=server"
+  },
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

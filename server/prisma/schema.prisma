@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  donor
+  claimer
+}
+
+enum ListingStatus {
+  active
+  claimed
+  expired
+  completed
+}
+
+enum ClaimStatus {
+  pending
+  confirmed
+  no_show
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String   @db.VarChar(100)
+  email        String   @unique @db.VarChar(255)
+  passwordHash String
+  role         Role
+  // Prisma doesn't natively support PostGIS Point, so we'll store lat/lng as floats for MVP
+  // or use raw queries if strictly PostGIS is required.
+  latitude     Float?
+  longitude    Float?
+  createdAt    DateTime @default(now())
+
+  // Relations
+  listings     Listing[] @relation("DonorListings")
+  claims       Claim[]   @relation("ClaimerClaims")
+}
+
+model Listing {
+  id          String        @id @default(uuid())
+  donorId     String
+  donor       User          @relation("DonorListings", fields: [donorId], references: [id])
+  title       String        @db.VarChar(150)
+  category    String?       @db.VarChar(50)
+  description String?       @db.Text
+  photoUrl    String?       @db.Text
+  quantity    String        @db.VarChar(50)
+  latitude    Float?
+  longitude   Float?
+  address     String?       @db.Text
+  expiresAt   DateTime
+  pickupStart DateTime
+  pickupEnd   DateTime
+  status      ListingStatus @default(active)
+  createdAt   DateTime      @default(now())
+
+  // Relations
+  claims      Claim[]
+}
+
+model Claim {
+  id        String      @id @default(uuid())
+  listingId String
+  listing   Listing     @relation(fields: [listingId], references: [id])
+  claimerId String
+  claimer   User        @relation("ClaimerClaims", fields: [claimerId], references: [id])
+  claimedAt DateTime    @default(now())
+  status    ClaimStatus @default(pending)
+
+  // Relations
+  ratings   Rating[]
+}
+
+model Rating {
+  id       String  @id @default(uuid())
+  claimId  String
+  claim    Claim   @relation(fields: [claimId], references: [id])
+  score    Int     // 1 to 5
+  comment  String? @db.Text
+}

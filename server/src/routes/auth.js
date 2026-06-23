@@ -1,12 +1,13 @@
 const express = require('express');
 const { body } = require('express-validator');
-const { register, login } = require('../controllers/auth.controller');
+const { signup, login, logout, getMe } = require('../controllers/auth.controller');
+const { verifyToken } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
 /**
  * @swagger
- * /api/auth/register:
+ * /api/auth/signup:
  *   post:
  *     summary: Register a new user
  *     tags: [Auth]
@@ -28,21 +29,23 @@ const router = express.Router();
  *                 type: string
  *               password:
  *                 type: string
+ *               city:
+ *                 type: string
  *               role:
  *                 type: string
  *                 enum: [donor, claimer]
  *     responses:
  *       201:
- *         description: User registered successfully
+ *         description: User registered successfully. Sets an httpOnly refresh token cookie and returns a short-lived access token.
  *       400:
  *         description: Validation error or user exists
  */
-router.post('/register', [
+router.post('/signup', [
   body('name').notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Valid email is required'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   body('role').isIn(['donor', 'claimer']).withMessage('Role must be donor or claimer')
-], register);
+], signup);
 
 /**
  * @swagger
@@ -66,7 +69,7 @@ router.post('/register', [
  *                 type: string
  *     responses:
  *       200:
- *         description: Logged in successfully
+ *         description: Logged in successfully. Sets an httpOnly refresh token cookie and returns a short-lived access token.
  *       401:
  *         description: Invalid credentials
  */
@@ -74,5 +77,33 @@ router.post('/login', [
   body('email').isEmail().withMessage('Valid email is required'),
   body('password').notEmpty().withMessage('Password is required')
 ], login);
+
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Log out user
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logged out successfully
+ */
+router.post('/logout', verifyToken, logout);
+
+/**
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     summary: Get current user
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Returns current user data
+ */
+router.get('/me', verifyToken, getMe);
 
 module.exports = router;

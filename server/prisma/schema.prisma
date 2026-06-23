@@ -35,11 +35,13 @@ model User {
   // or use raw queries if strictly PostGIS is required.
   latitude     Float?
   longitude    Float?
+  city         String?  @db.VarChar(100)
   createdAt    DateTime @default(now())
 
   // Relations
-  listings     Listing[] @relation("DonorListings")
-  claims       Claim[]   @relation("ClaimerClaims")
+  listings      Listing[]      @relation("DonorListings")
+  claims        Claim[]        @relation("ClaimerClaims")
+  refreshTokens RefreshToken[]
 }
 
 model Listing {
@@ -53,6 +55,7 @@ model Listing {
   quantity    String        @db.VarChar(50)
   latitude    Float?
   longitude   Float?
+  city        String?       @db.VarChar(100)
   address     String?       @db.Text
   expiresAt   DateTime
   pickupStart DateTime
@@ -61,7 +64,7 @@ model Listing {
   createdAt   DateTime      @default(now())
 
   // Relations
-  claims      Claim[]
+  claims Claim[]
 }
 
 model Claim {
@@ -74,13 +77,25 @@ model Claim {
   status    ClaimStatus @default(pending)
 
   // Relations
-  ratings   Rating[]
+  ratings Rating[]
 }
 
 model Rating {
-  id       String  @id @default(uuid())
-  claimId  String
-  claim    Claim   @relation(fields: [claimId], references: [id])
-  score    Int     // 1 to 5
-  comment  String? @db.Text
+  id      String  @id @default(uuid())
+  claimId String
+  claim   Claim   @relation(fields: [claimId], references: [id])
+  score   Int // 1 to 5
+  comment String? @db.Text
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
 }

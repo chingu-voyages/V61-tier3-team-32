@@ -87,4 +87,6 @@ export const uploadListingPhoto = (listingId, photoFile, onProgress) => {
   });
 };
 
+export const cancelListing = (listingId) => api.delete(`/listings/${listingId}`);
+
 export default api;

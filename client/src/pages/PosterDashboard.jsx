@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PlusCircle, Clock, Leaf, Package, Check } from 'lucide-react';
-import { getMyListings } from '../lib/api';
+import { getMyListings, cancelListing } from '../lib/api';
+import CancelListingModal from '../components/modals/CancelListingModal';
 
 const statCard = (icon, label, value) => (
   <div className="bg-white rounded-2xl p-6 shadow-sm flex-1 min-w-0 w-full">
@@ -13,7 +14,7 @@ const statCard = (icon, label, value) => (
   </div>
 );
 
-const ListingCard = ({ listing }) => {
+const ListingCard = ({ listing, onCancelClick }) => {
   const formatTimeLeft = (createdAt) => {
     const now = new Date();
     const created = new Date(createdAt);
@@ -39,7 +40,12 @@ const ListingCard = ({ listing }) => {
 
       <div className="mt-4 bg-green-50 text-green-800 px-3 py-2 rounded-lg">Status: {listing.status || 'Active'}</div>
 
-      <button className="mt-4 w-full border border-red-200 text-red-600 rounded-lg py-2">Cancel sharing</button>
+      <button 
+        onClick={() => onCancelClick(listing)}
+        className="mt-4 w-full border border-red-200 text-red-600 rounded-lg py-2 hover:bg-red-50 transition-colors"
+      >
+        Cancel sharing
+      </button>
     </div>
   );
 };
@@ -48,6 +54,9 @@ export default function PosterDashboard() {
   const [listings, setListings] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [selectedListing, setSelectedListing] = useState(null);
+  const [isCanceling, setIsCanceling] = useState(false);
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -67,10 +76,46 @@ export default function PosterDashboard() {
     fetchListings();
   }, []);
 
+  const handleCancelClick = (listing) => {
+    setSelectedListing(listing);
+    setCancelModalOpen(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!selectedListing) return;
+
+    setIsCanceling(true);
+    try {
+      await cancelListing(selectedListing.id);
+      setListings(listings.filter(l => l.id !== selectedListing.id));
+      setCancelModalOpen(false);
+      setSelectedListing(null);
+    } catch (err) {
+      console.error('Failed to cancel listing:', err);
+      alert('Failed to cancel listing. Please try again.');
+      setIsCanceling(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    if (!isCanceling) {
+      setCancelModalOpen(false);
+      setSelectedListing(null);
+    }
+  };
+
   const activeListings = listings.filter(l => l.status === 'active').length;
 
   return (
     <div className="min-h-screen bg-emerald-50 px-4 py-6 sm:px-6 lg:px-8">
+      <CancelListingModal
+        isOpen={cancelModalOpen}
+        listing={selectedListing}
+        isLoading={isCanceling}
+        onConfirm={handleConfirmCancel}
+        onCancel={handleCloseModal}
+      />
+
       <div className="max-w-7xl mx-auto">
         <a href="/" className="text-sm text-mid-gray inline-flex items-center gap-2">← Back to home</a>
 
@@ -101,7 +146,7 @@ export default function PosterDashboard() {
         {!isLoading && listings.length > 0 && (
           <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-2">
             {listings.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} />
+              <ListingCard key={listing.id} listing={listing} onCancelClick={handleCancelClick} />
             ))}
           </div>
         )}

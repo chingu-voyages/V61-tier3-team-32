@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route, Link, useLocation } from "react-router-dom";
 import { UtensilsCrossed, LogIn, UserPlus, Menu, X, ChevronUp, LayoutDashboard, CheckCircle2 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
@@ -8,6 +8,7 @@ import SignupModal from "../auth/SignupModal";
 import Home from "../../pages/Home";
 import ResetPassword from "../../pages/ResetPassword";
 import PosterDashboard from "../../pages/PosterDashboard";
+import PostFoodForm from "../post/PostFoodForm";
 
 function NavAuth({ onOpenLogin, onOpenSignup, isMobile = false }) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
@@ -125,6 +126,9 @@ function AppShell() {
     { name: "Communities", href: "#communities" },
   ];
 
+  const location = useLocation();
+  const hideCenterNav = location.pathname.startsWith("/dashboard");
+
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-dark">
       {/* Navigation Bar */}
@@ -140,17 +144,19 @@ function AppShell() {
             </Link>
 
             {/* Desktop Center Links */}
-            <nav className="hidden lg:flex items-center gap-8">
-              {navLinks.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  className="text-sm font-medium text-mid-gray hover:text-dark transition"
-                >
-                  {link.name}
-                </a>
-              ))}
-            </nav>
+            {!hideCenterNav && (
+              <nav className="hidden lg:flex items-center gap-8">
+                {navLinks.map((link) => (
+                  <a
+                    key={link.name}
+                    href={link.href}
+                    className="text-sm font-medium text-mid-gray hover:text-dark transition"
+                  >
+                    {link.name}
+                  </a>
+                ))}
+              </nav>
+            )}
 
             {/* Desktop Auth Actions & Mobile Hamburger */}
             <div className="flex items-center gap-4">
@@ -171,7 +177,7 @@ function AppShell() {
         {mobileMenuOpen && (
           <div className="lg:hidden bg-white border-b border-gray-100 absolute top-20 left-0 w-full shadow-lg">
             <div className="px-4 pt-2 pb-6 space-y-1">
-              {navLinks.map((link) => (
+              {!hideCenterNav && navLinks.map((link) => (
                 <a
                   key={link.name}
                   href={link.href}
@@ -195,6 +201,7 @@ function AppShell() {
           <Route path="/" element={<Home />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/dashboard" element={<PosterDashboard />} />
+          <Route path="/post" element={<PostFoodForm />} />
         </Routes>
       </main>
 

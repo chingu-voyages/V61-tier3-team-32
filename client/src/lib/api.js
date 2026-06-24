@@ -65,4 +65,19 @@ api.interceptors.response.use(
   },
 );
 
+export const createListing = (listingData) => api.post('/listings', listingData);
+
+export const uploadListingPhoto = (listingId, photoFile, onProgress) => {
+  const formData = new FormData();
+  formData.append('photo', photoFile, photoFile.name || 'photo.jpg');
+  return api.post(`/listings/${listingId}/photo`, formData, {
+    onUploadProgress: (progressEvent) => {
+      if (onProgress) {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        onProgress(percentCompleted);
+      }
+    },
+  });
+};
+
 export default api;

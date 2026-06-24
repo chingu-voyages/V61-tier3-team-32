@@ -65,6 +65,13 @@ api.interceptors.response.use(
   },
 );
 
+export const getListings = (city) => {
+  const params = city ? { city } : {};
+  return api.get('/listings', { params });
+};
+
+export const getMyListings = () => api.get('/listings/mine');
+
 export const createListing = (listingData) => api.post('/listings', listingData);
 
 export const uploadListingPhoto = (listingId, photoFile, onProgress) => {

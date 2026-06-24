@@ -1,43 +1,57 @@
+import { useEffect, useState } from 'react';
 import { Clock, MapPin, Star } from "lucide-react";
+import { getListings } from '../../lib/api';
 
 export default function LiveFeedSection() {
   const filters = ["All", "Lagos", "Abuja", "Port Harcourt", "Ibadan"];
+  const [listings, setListings] = useState([]);
+  const [selectedCity, setSelectedCity] = useState("All");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const feedItems = [
-    {
-      category: "Hot Meal",
-      timeBg: "bg-urgency/10 text-urgency",
-      timeLeft: "42m left",
-      title: "Fresh Jollof Rice & Vegetables",
-      source: "Mama Ada's Kitchen",
-      quantity: "Serves 6",
-      distance: "1.2 km",
-      location: "Lagos, Nigeria",
-      rating: "4.8"
-    },
-    {
-      category: "Hot Meal",
-      timeBg: "bg-urgency text-white",
-      timeLeft: "18m left",
-      title: "Egusi Soup & Pounded Yam",
-      source: "Chop Life Buka",
-      quantity: "10 plates",
-      distance: "0.6 km",
-      location: "Port Harcourt, Nigeria",
-      rating: "4.9"
-    },
-    {
-      category: "Bakery",
-      timeBg: "bg-primary text-white",
-      timeLeft: "2h 55m left",
-      title: "End-of-day Breads & Pastries",
-      source: "Crust & Crumb Bakery",
-      quantity: "20+ items",
-      distance: "2.8 km",
-      location: "Abuja, Nigeria",
-      rating: "4.7"
+  useEffect(() => {
+    const fetchListings = async () => {
+      setIsLoading(true);
+      setError('');
+      try {
+        const city = selectedCity === "All" ? null : selectedCity;
+        const { data } = await getListings(city);
+        setListings(data);
+      } catch (err) {
+        console.error('Failed to fetch listings:', err);
+        setError('Unable to load listings');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchListings();
+  }, [selectedCity]);
+
+  const formatTimeLeft = (createdAt) => {
+    const now = new Date();
+    const created = new Date(createdAt);
+    const diffMs = now - created;
+    const diffMins = Math.floor(diffMs / 60000);
+
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${Math.floor(diffHours / 24)}d ago`;
+  };
+
+  const getCategoryBg = (category) => {
+    switch (category) {
+      case 'Hot Meal':
+        return 'bg-red-100 text-red-800';
+      case 'Snacks':
+        return 'bg-blue-100 text-blue-800';
+      case 'Bakery':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-green-100 text-green-800';
     }
-  ];
+  };
 
   return (
     <section className="py-20 bg-[#FAFAFA]" id="feed">
@@ -48,13 +62,15 @@ export default function LiveFeedSection() {
         </div>
 
         <div className="flex overflow-x-auto gap-2 pb-4 mb-8 scrollbar-hide">
-          {filters.map((filter, index) => (
+          {filters.map((filter) => (
             <button
               key={filter}
-              className={`whitespace-nowrap px-6 py-2.5 rounded-full font-medium transition ${index === 0
-                ? "bg-primary text-white"
-                : "bg-white text-mid-gray border border-gray-200 hover:border-primary/50"
-                }`}
+              onClick={() => setSelectedCity(filter)}
+              className={`whitespace-nowrap px-6 py-2.5 rounded-full font-medium transition ${
+                selectedCity === filter
+                  ? "bg-primary text-white"
+                  : "bg-white text-mid-gray border border-gray-200 hover:border-primary/50"
+              }`}
             >
               {filter}
             </button>
@@ -62,31 +78,31 @@ export default function LiveFeedSection() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {feedItems.map((item, index) => (
-            <div key={index} className="bg-white rounded-3xl p-6 border border-gray-100 hover:shadow-lg transition-shadow flex flex-col">
+          {isLoading && <p className="text-mid-gray">Loading listings...</p>}
+          {error && <p className="text-red-600">{error}</p>}
+          {!isLoading && listings.length === 0 && <p className="text-mid-gray">No listings available</p>}
+          
+          {listings.map((listing) => (
+            <div key={listing.id} className="bg-white rounded-3xl p-6 border border-gray-100 hover:shadow-lg transition-shadow flex flex-col">
               <div className="flex justify-between items-start mb-4">
-                <span className="px-3 py-1 bg-primary text-white text-xs font-semibold rounded-full">
-                  {item.category}
+                <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getCategoryBg(listing.category)}`}>
+                  {listing.category}
                 </span>
-                <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${item.timeBg}`}>
+                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
                   <Clock size={14} />
-                  {item.timeLeft}
+                  {formatTimeLeft(listing.createdAt)}
                 </span>
               </div>
 
-              <h4 className="text-xl font-bold text-dark mb-2">{item.title}</h4>
+              <h4 className="text-xl font-bold text-dark mb-2">{listing.title}</h4>
               <p className="text-mid-gray text-sm mb-6">
-                {item.source} · {item.quantity}
+                {listing.quantity}
               </p>
 
               <div className="flex items-center justify-between text-sm text-mid-gray mb-8">
                 <div className="flex items-center gap-1.5">
                   <MapPin size={16} className="text-primary" />
-                  {item.distance} · {item.location}
-                </div>
-                <div className="flex items-center gap-1 font-medium text-dark">
-                  <Star size={16} className="text-urgency fill-urgency" />
-                  {item.rating}
+                  {listing.city}
                 </div>
               </div>
 

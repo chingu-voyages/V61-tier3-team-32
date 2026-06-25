@@ -32,7 +32,7 @@ api.interceptors.response.use(
     // These should NOT trigger a refresh attempt
     const isAuthRequest =
       config?.url?.includes("/auth/login") ||
-      config?.url?.includes("/auth/register") ||
+      config?.url?.includes("/auth/signup") ||
       config?.url?.includes("/auth/refresh");
 
     // Only attempt refresh for 401 errors that:
@@ -64,5 +64,29 @@ api.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+export const getListings = (city) => {
+  const params = city ? { city } : {};
+  return api.get('/listings', { params });
+};
+
+export const getMyListings = () => api.get('/listings/mine');
+
+export const createListing = (listingData) => api.post('/listings', listingData);
+
+export const uploadListingPhoto = (listingId, photoFile, onProgress) => {
+  const formData = new FormData();
+  formData.append('photo', photoFile, photoFile.name || 'photo.jpg');
+  return api.post(`/listings/${listingId}/photo`, formData, {
+    onUploadProgress: (progressEvent) => {
+      if (onProgress) {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        onProgress(percentCompleted);
+      }
+    },
+  });
+};
+
+export const cancelListing = (listingId) => api.delete(`/listings/${listingId}`);
 
 export default api;

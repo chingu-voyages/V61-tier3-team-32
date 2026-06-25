@@ -1,6 +1,6 @@
 const express = require('express');
 const { body } = require('express-validator');
-const { signup, login, logout, getMe } = require('../controllers/auth.controller');
+const { signup, login, logout, getMe, forgotPassword, resetPassword, refresh } = require('../controllers/auth.controller');
 const { verifyToken } = require('../middleware/auth.middleware');
 
 const router = express.Router();
@@ -105,5 +105,70 @@ router.post('/logout', verifyToken, logout);
  *         description: Returns current user data
  */
 router.get('/me', verifyToken, getMe);
+
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Send a password reset email
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Reset link sent (always 200 to avoid email enumeration)
+ */
+router.post('/forgot-password', forgotPassword);
+
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     summary: Reset user password using a valid token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [token, password]
+ *             properties:
+ *               token:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password updated successfully
+ *       400:
+ *         description: Invalid or expired token
+ */
+router.post('/reset-password', [
+  body('token').notEmpty().withMessage('Token is required'),
+  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+], resetPassword);
+
+/**
+ * @swagger
+ * /api/auth/refresh:
+ *   post:
+ *     summary: Rotate refresh token and return a new access token
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Returns new access token and sets a rotated refresh cookie
+ *       401:
+ *         description: Invalid or expired refresh token
+ */
+router.post('/refresh', refresh);
 
 module.exports = router;

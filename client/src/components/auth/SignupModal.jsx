@@ -1,13 +1,35 @@
 import { useState } from "react";
-import { X, UserPlus, ChefHat, ShoppingBasket } from "lucide-react";
+import {
+  X,
+  UserPlus,
+  ChefHat,
+  ShoppingBasket,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
+
+const NIGERIAN_CITIES = [
+  "Lagos",
+  "Abuja",
+  "Port Harcourt",
+  "Kano",
+  "Ibadan",
+  "Abeokuta",
+  "Enugu",
+  "Kaduna",
+  "Benin City",
+  "Jos",
+];
 
 const initialFormState = {
   name: "",
   email: "",
   password: "",
   role: "claimer",
+  city: "Lagos",
+  legalAccepted: false,
 };
 
 export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
@@ -15,13 +37,18 @@ export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
   const [form, setForm] = useState(initialFormState);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const updateField = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
   const selectRole = (role) => () => {
-    setForm((prev) => ({ ...prev, role }));
+    setForm((prev) => ({ ...prev, role, legalAccepted: false }));
+  };
+
+  const toggleLegalAccepted = () => {
+    setForm((prev) => ({ ...prev, legalAccepted: !prev.legalAccepted }));
   };
 
   const handleSubmit = async (e) => {
@@ -39,6 +66,10 @@ export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
     }
     if (form.password.length < 8) {
       setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (!form.legalAccepted) {
+      setError("You must accept the legal terms to continue.");
       return;
     }
 
@@ -59,11 +90,11 @@ export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl max-h-[calc(100vh-4rem)] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between">
@@ -163,14 +194,114 @@ export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
             >
               Password *
             </label>
-            <input
-              id="password"
-              type="password"
-              value={form.password}
-              onChange={updateField("password")}
-              placeholder="At least 8 characters"
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={form.password}
+                onChange={updateField("password")}
+                placeholder="At least 8 characters"
+                className="w-full rounded-lg border border-gray-200 bg-light-gray px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-primary"
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-dark transition"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="city"
+              className="block text-sm font-medium text-dark mb-1"
+            >
+              City *
+            </label>
+            <select
+              id="city"
+              value={form.city}
+              onChange={updateField("city")}
               className="w-full rounded-lg border border-gray-200 bg-light-gray px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-primary"
-            />
+            >
+              {NIGERIAN_CITIES.map((city) => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Legal Compliance Section */}
+          <div className="border-t border-gray-200 pt-4 mt-2">
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="legalAcceptance"
+                checked={form.legalAccepted}
+                onChange={toggleLegalAccepted}
+                className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary-light cursor-pointer"
+              />
+              <label
+                htmlFor="legalAcceptance"
+                className="text-sm text-dark cursor-pointer"
+              >
+                {form.role === "claimer" ? (
+                  <>
+                    By checking this box, you agree that FoodRescue is a
+                    peer-to-peer matching platform and does not inspect,
+                    prepare, or guarantee the safety of any food listed. You
+                    acknowledge that:
+                    <ul className="list-disc pl-5 mt-1 space-y-1 text-mid-gray">
+                      <li>
+                        You are claiming surplus, end-of-day, or near-expiry
+                        food entirely at your own risk.
+                      </li>
+                      <li>
+                        It is your sole responsibility to inspect the food upon
+                        pickup for freshness, proper temperature, odor, and
+                        appearance before consuming it.
+                      </li>
+                      <li>
+                        You release both FoodRescue and the individual food
+                        donor from any liability or claims resulting from
+                        accidental foodborne illness or adverse allergic
+                        reactions.
+                      </li>
+                    </ul>
+                  </>
+                ) : (
+                  <>
+                    By posting a listing, you certify that you are sharing this
+                    food in good faith to reduce community waste. You promise
+                    that:
+                    <ul className="list-disc pl-5 mt-1 space-y-1 text-mid-gray">
+                      <li>
+                        The food is safe, edible, and has been handled according
+                        to basic hygienic standards up until the point of
+                        pickup.
+                      </li>
+                      <li>
+                        You have provided an accurate Expiry Time and Pickup
+                        Window.
+                      </li>
+                      <li>
+                        If the food becomes spoiled, contaminated, or
+                        unavailable before the pickup window closes, you will
+                        immediately delete or cancel the listing.
+                      </li>
+                    </ul>
+                  </>
+                )}
+              </label>
+            </div>
           </div>
 
           {error && (

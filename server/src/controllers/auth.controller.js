@@ -1,7 +1,9 @@
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 const { validationResult } = require("express-validator");
 
 const prisma = require("../lib/prisma");
+const { sendPasswordResetEmail } = require("../lib/mailer");
 const {
   signAccessToken,
   signRefreshToken,
@@ -64,7 +66,7 @@ const signup = async (req, res) => {
     res.status(201).json({
       message: 'User created successfully',
       user: { id: user.id, name: user.name, email: user.email, role: user.role, city: user.city },
-      token
+      token: accessToken
     });
   } catch (error) {
     console.error("Registration Error:", error);
@@ -96,7 +98,7 @@ const login = async (req, res) => {
     res.json({
       message: 'Logged in successfully',
       user: { id: user.id, name: user.name, email: user.email, role: user.role, city: user.city },
-      token
+      token: accessToken
     });
   } catch (error) {
     console.error("Login Error:", error);
@@ -195,12 +197,97 @@ const logout = async (req, res) => {
   res.json({ message: "Logged out successfully" });
 };
 
-const logout = (req, res) => {
-  res.json({ message: 'Logged out successfully. Please remove token from client.' });
-};
+
 
 const getMe = (req, res) => {
   res.json({ user: req.user });
 };
 
-module.exports = { signup, login, logout, getMe };
+// Generates a secure random token, stores its hash in the DB (expires in 1 h),
+// and emails a reset link to the user. Always returns 200 so we never reveal
+// whether a given email is registered.
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email || !email.includes("@")) {
+    return res.status(400).json({ message: "Valid email is required" });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (user) {
+      // Invalidate any existing unused tokens for this user
+      await prisma.passwordResetToken.updateMany({
+        where: { userId: user.id, usedAt: null },
+        data: { usedAt: new Date() },
+      });
+
+      const rawToken = crypto.randomBytes(32).toString("hex");
+      const tokenHash = hashToken(rawToken);
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      await prisma.passwordResetToken.create({
+        data: { userId: user.id, tokenHash, expiresAt },
+      });
+
+      const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${rawToken}`;
+
+      await sendPasswordResetEmail({
+        to: user.email,
+        name: user.name,
+        resetUrl,
+      });
+    }
+
+    // Always return 200 regardless of whether the email exists
+    res.json({ message: "If that email is registered, a reset link has been sent." });
+  } catch (error) {
+    console.error("Forgot Password Error:", error);
+    res.status(500).json({ message: "Server error. Please try again." });
+  }
+};
+
+// Validates the reset token and updates the user's password.
+const resetPassword = async (req, res) => {
+  const { token, password } = req.body;
+
+  if (!token || !password || password.length < 8) {
+    return res.status(400).json({ message: "Token and a password of at least 8 characters are required." });
+  }
+
+  try {
+    const tokenHash = hashToken(token);
+    const stored = await prisma.passwordResetToken.findUnique({ where: { tokenHash } });
+
+    if (!stored || stored.usedAt || stored.expiresAt < new Date()) {
+      return res.status(400).json({ message: "This reset link is invalid or has expired." });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: stored.userId },
+        data: { passwordHash },
+      }),
+      prisma.passwordResetToken.update({
+        where: { id: stored.id },
+        data: { usedAt: new Date() },
+      }),
+      // Revoke all existing refresh tokens to force re-login everywhere
+      prisma.refreshToken.updateMany({
+        where: { userId: stored.userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      }),
+    ]);
+
+    res.json({ message: "Password updated successfully. Please log in with your new password." });
+  } catch (error) {
+    console.error("Reset Password Error:", error);
+    res.status(500).json({ message: "Server error. Please try again." });
+  }
+};
+
+module.exports = { signup, login, logout, getMe, forgotPassword, resetPassword, refresh };

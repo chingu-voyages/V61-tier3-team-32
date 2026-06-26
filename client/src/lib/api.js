@@ -67,26 +67,38 @@ api.interceptors.response.use(
 
 export const getListings = (city) => {
   const params = city ? { city } : {};
-  return api.get('/listings', { params });
+  return api.get("/listings", { params });
 };
 
-export const getMyListings = () => api.get('/listings/mine');
+export const getMyListings = () => api.get("/listings/mine");
 
-export const createListing = (listingData) => api.post('/listings', listingData);
+export const createListing = (listingData) =>
+  api.post("/listings", listingData);
 
 export const uploadListingPhoto = (listingId, photoFile, onProgress) => {
   const formData = new FormData();
-  formData.append('photo', photoFile, photoFile.name || 'photo.jpg');
+  formData.append("photo", photoFile, photoFile.name || "photo.jpg");
   return api.post(`/listings/${listingId}/photo`, formData, {
     onUploadProgress: (progressEvent) => {
       if (onProgress) {
-        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        const percentCompleted = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total,
+        );
         onProgress(percentCompleted);
       }
     },
   });
 };
 
-export const cancelListing = (listingId) => api.delete(`/listings/${listingId}`);
+export const cancelListing = (listingId) =>
+  api.delete(`/listings/${listingId}`);
+
+export const claimListing = (listingId) => {
+  return api.post(`/listings/${listingId}/claim`);
+};
+
+export const getMyClaims = () => {
+  return api.get("/claims/mine");
+};
 
 export default api;

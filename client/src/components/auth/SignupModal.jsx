@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { X, UserPlus, ChefHat, ShoppingBasket, Eye, EyeOff } from "lucide-react";
+import {
+  X,
+  UserPlus,
+  ChefHat,
+  ShoppingBasket,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
 
@@ -13,7 +20,7 @@ const NIGERIAN_CITIES = [
   "Enugu",
   "Kaduna",
   "Benin City",
-  "Jos"
+  "Jos",
 ];
 
 const initialFormState = {
@@ -22,6 +29,7 @@ const initialFormState = {
   password: "",
   role: "claimer",
   city: "Lagos",
+  legalAccepted: false,
 };
 
 export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
@@ -36,7 +44,11 @@ export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
   };
 
   const selectRole = (role) => () => {
-    setForm((prev) => ({ ...prev, role }));
+    setForm((prev) => ({ ...prev, role, legalAccepted: false }));
+  };
+
+  const toggleLegalAccepted = () => {
+    setForm((prev) => ({ ...prev, legalAccepted: !prev.legalAccepted }));
   };
 
   const handleSubmit = async (e) => {
@@ -54,6 +66,10 @@ export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
     }
     if (form.password.length < 8) {
       setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (!form.legalAccepted) {
+      setError("You must accept the legal terms to continue.");
       return;
     }
 
@@ -126,10 +142,11 @@ export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
               <button
                 type="button"
                 onClick={selectRole("donor")}
-                className={`rounded-xl border p-3 text-left transition ${form.role === "donor"
-                  ? "border-primary bg-primary-light"
-                  : "border-gray-200 bg-white"
-                  }`}
+                className={`rounded-xl border p-3 text-left transition ${
+                  form.role === "donor"
+                    ? "border-primary bg-primary-light"
+                    : "border-gray-200 bg-white"
+                }`}
               >
                 <ChefHat className="h-5 w-5 text-dark mb-1" />
                 <p className="font-semibold text-sm text-dark">Post food</p>
@@ -140,10 +157,11 @@ export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
               <button
                 type="button"
                 onClick={selectRole("claimer")}
-                className={`rounded-xl border p-3 text-left transition ${form.role === "claimer"
-                  ? "border-primary bg-primary-light"
-                  : "border-gray-200 bg-white"
-                  }`}
+                className={`rounded-xl border p-3 text-left transition ${
+                  form.role === "claimer"
+                    ? "border-primary bg-primary-light"
+                    : "border-gray-200 bg-white"
+                }`}
               >
                 <ShoppingBasket className="h-5 w-5 text-dark mb-1" />
                 <p className="font-semibold text-sm text-dark">Claim food</p>
@@ -191,7 +209,11 @@ export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>
@@ -215,6 +237,71 @@ export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Legal Compliance Section */}
+          <div className="border-t border-gray-200 pt-4 mt-2">
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="legalAcceptance"
+                checked={form.legalAccepted}
+                onChange={toggleLegalAccepted}
+                className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary-light cursor-pointer"
+              />
+              <label
+                htmlFor="legalAcceptance"
+                className="text-sm text-dark cursor-pointer"
+              >
+                {form.role === "claimer" ? (
+                  <>
+                    By checking this box, you agree that FoodRescue is a
+                    peer-to-peer matching platform and does not inspect,
+                    prepare, or guarantee the safety of any food listed. You
+                    acknowledge that:
+                    <ul className="list-disc pl-5 mt-1 space-y-1 text-mid-gray">
+                      <li>
+                        You are claiming surplus, end-of-day, or near-expiry
+                        food entirely at your own risk.
+                      </li>
+                      <li>
+                        It is your sole responsibility to inspect the food upon
+                        pickup for freshness, proper temperature, odor, and
+                        appearance before consuming it.
+                      </li>
+                      <li>
+                        You release both FoodRescue and the individual food
+                        donor from any liability or claims resulting from
+                        accidental foodborne illness or adverse allergic
+                        reactions.
+                      </li>
+                    </ul>
+                  </>
+                ) : (
+                  <>
+                    By posting a listing, you certify that you are sharing this
+                    food in good faith to reduce community waste. You promise
+                    that:
+                    <ul className="list-disc pl-5 mt-1 space-y-1 text-mid-gray">
+                      <li>
+                        The food is safe, edible, and has been handled according
+                        to basic hygienic standards up until the point of
+                        pickup.
+                      </li>
+                      <li>
+                        You have provided an accurate Expiry Time and Pickup
+                        Window.
+                      </li>
+                      <li>
+                        If the food becomes spoiled, contaminated, or
+                        unavailable before the pickup window closes, you will
+                        immediately delete or cancel the listing.
+                      </li>
+                    </ul>
+                  </>
+                )}
+              </label>
+            </div>
           </div>
 
           {error && (

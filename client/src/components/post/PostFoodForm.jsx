@@ -205,7 +205,7 @@ export default function PostFoodForm() {
         setUploadProgress(Math.max(1, progress));
       });
 
-      navigate('/dashboard');
+      navigate('/donor');
     } catch (uploadError) {
       console.error(uploadError);
       setError(uploadError?.response?.data?.message || uploadError.message || 'Unable to create listing.');
@@ -225,7 +225,7 @@ export default function PostFoodForm() {
               <h2 className="text-xl font-semibold text-green-900">Post surplus food</h2>
               <p className="text-sm text-mid-gray mt-1">Upload a photo, then complete the details to publish your listing.</p>
             </div>
-            <Link to="/dashboard" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-dark transition">
+            <Link to="/donor" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-dark transition">
               <X size={18} />
             </Link>
           </div>
@@ -448,7 +448,7 @@ export default function PostFoodForm() {
           )}
 
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-            <Link to="/dashboard" className="inline-flex justify-center rounded-2xl border border-gray-200 bg-white px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">
+            <Link to="/donor" className="inline-flex justify-center rounded-2xl border border-gray-200 bg-white px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">
               Cancel
             </Link>
             <button

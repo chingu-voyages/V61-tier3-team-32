@@ -1,79 +1,188 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { PlusCircle, Clock, Leaf, Package, Check } from 'lucide-react';
-import { getMyListings, cancelListing } from '../lib/api';
-import CancelListingModal from '../components/modals/CancelListingModal';
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  PlusCircle,
+  Package,
+  HandHeart,
+  Leaf,
+  Pencil,
+  Trash2,
+  Clock,
+  Users,
+  MapPin,
+  Weight,
+  UtensilsCrossed,
+} from "lucide-react";
+import { getMyListings, cancelListing } from "../lib/api";
+import CancelListingModal from "../components/modals/CancelListingModal";
+import { useAuth } from "../context/AuthContext";
 
-const statCard = (icon, label, value) => (
-  <div className="bg-white rounded-2xl p-6 shadow-sm flex-1 min-w-0 w-full">
-    <div className="flex items-center gap-3 text-sm text-mid-gray">
-      {icon}
-      <span className="uppercase text-xs tracking-wide">{label}</span>
-    </div>
-    <div className="mt-4 text-2xl font-bold">{value}</div>
-  </div>
-);
+const now = Date.now();
 
-const ListingCard = ({ listing, onCancelClick }) => {
-  const formatTimeLeft = (createdAt) => {
-    const now = new Date();
-    const created = new Date(createdAt);
-    const diffMs = now - created;
-    const diffMins = Math.floor(diffMs / 60000);
+// ─── helpers ────────────────────────────────────────────────────────────────
 
-    if (diffMins < 60) return `${diffMins}m ago`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return `${Math.floor(diffHours / 24)}d ago`;
-  };
+function formatExpiry(expiresAt) {
+  if (!expiresAt) return null;
+  const diffMs = new Date(expiresAt).getTime() - Date.now();
+  const diffMins = Math.round(diffMs / 60000);
+  if (diffMins <= 0) return "Expired";
+  if (diffMins < 60) return `Expires in ${diffMins}m`;
+  const hrs = Math.round(diffMins / 60);
+  return `Expires in ${hrs}h`;
+}
 
+function isExpiringSoon(expiresAt) {
+  if (!expiresAt) return false;
+  const diffMs = new Date(expiresAt).getTime() - Date.now();
+  return diffMs > 0 && diffMs <= 60 * 60 * 1000; // within 1 hour
+}
+
+// ─── stat card ──────────────────────────────────────────────────────────────
+
+function StatCard({ icon, value, label }) {
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-md border border-green-200 w-full">
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div>
-          <div className="text-xs uppercase bg-gray-100 inline-block px-3 py-1 rounded-full text-sm font-medium">{listing.category}</div>
-          <h3 className="mt-3 text-lg font-semibold">{listing.title}</h3>
-          <div className="text-sm text-mid-gray">{listing.quantity} · {listing.city}</div>
-        </div>
-        <div className="mt-2 md:mt-0 text-sm text-green-800 bg-green-100 px-3 py-1 rounded-full self-start">{formatTimeLeft(listing.createdAt)}</div>
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex-1 min-w-0">
+      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-primary mb-4">
+        {icon}
       </div>
-
-      <div className="mt-4 bg-green-50 text-green-800 px-3 py-2 rounded-lg">Status: {listing.status || 'Active'}</div>
-
-      <button 
-        onClick={() => onCancelClick(listing)}
-        className="mt-4 w-full border border-red-200 text-red-600 rounded-lg py-2 hover:bg-red-50 transition-colors"
-      >
-        Cancel sharing
-      </button>
+      <p className="text-3xl font-bold text-dark">{value}</p>
+      <p className="text-sm text-mid-gray mt-1">{label}</p>
     </div>
   );
-};
+}
+
+// ─── listing card ───────────────────────────────────────────────────────────
+
+function ListingCard({ listing, onCancelClick }) {
+  const isClaimed = listing.status === "claimed";
+  const expiryLabel = formatExpiry(listing.expiresAt);
+  const expiringSoon = isExpiringSoon(listing.expiresAt);
+
+  const quantityIcon =
+    listing.category === "Hot Meal" ? (
+      <Users size={13} className="text-mid-gray shrink-0" />
+    ) : listing.category === "Bakery" ? (
+      <Package size={13} className="text-mid-gray shrink-0" />
+    ) : (
+      <Weight size={13} className="text-mid-gray shrink-0" />
+    );
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+      <div className="relative h-44 bg-gray-100">
+        {listing.photoUrl ? (
+          <img
+            src={listing.photoUrl}
+            alt={listing.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
+        )}
+
+        <span
+          className={`absolute top-3 left-3 text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-md ${
+            isClaimed ? "bg-blue-500/90 text-white" : "bg-primary/90 text-white"
+          }`}
+        >
+          {isClaimed ? "Claimed" : "Active"}
+        </span>
+      </div>
+
+      <div className="p-4 flex flex-col flex-1 gap-3">
+        <div>
+          <h3 className="font-bold text-dark leading-snug">{listing.title}</h3>
+        </div>
+
+        <div className="space-y-1.5">
+          {listing.quantity && (
+            <div className="flex items-center gap-1.5 text-sm text-mid-gray">
+              {quantityIcon}
+              <span>{listing.quantity}</span>
+            </div>
+          )}
+
+          {expiryLabel && (
+            <div className="flex items-center gap-1.5 text-xs">
+              {isClaimed ? (
+                <MapPin size={13} className="text-primary shrink-0" />
+              ) : (
+                <Clock
+                  size={13}
+                  className={
+                    expiringSoon
+                      ? "text-urgency shrink-0"
+                      : "text-primary shrink-0"
+                  }
+                />
+              )}
+              <span
+                className={`font-medium ${expiringSoon && !isClaimed ? "text-urgency font-medium" : "text-primary"}`}
+              >
+                {isClaimed ? "Ready for pickup" : expiryLabel}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 mt-auto pt-1">
+          {isClaimed ? (
+            <button className="flex-1 rounded-lg border border-primary py-2 text-sm font-medium text-primary hover:bg-gray-50 transition">
+              View Details
+            </button>
+          ) : (
+            <button className="flex-1 rounded-lg bg-blue-100 border border-blue-100 py-2 text-sm font-medium text-primary hover:bg-blue-200 transition">
+              Edit Listing
+            </button>
+          )}
+          <button
+            onClick={() => onCancelClick(listing)}
+            aria-label="Cancel listing"
+            className="flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-red-500 hover:text-red-500 hover:border-red-200 transition"
+          >
+            <Trash2 size={15} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── main dashboard ─────────────────────────────────────────────────────────
+
+const FILTERS = ["All", "Active", "Claimed"];
 
 export default function PosterDashboard() {
+  const { user } = useAuth();
   const [listings, setListings] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [activeFilter, setActiveFilter] = useState("All");
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState(null);
   const [isCanceling, setIsCanceling] = useState(false);
 
   useEffect(() => {
-    const fetchListings = async () => {
+    let cancelled = false;
+
+    async function fetchListings() {
       setIsLoading(true);
-      setError('');
+      setError("");
       try {
         const { data } = await getMyListings();
-        setListings(data);
+        if (!cancelled) setListings(data);
       } catch (err) {
-        console.error('Failed to fetch listings:', err);
-        setError('Unable to load your listings');
+        console.error("Failed to fetch listings:", err);
+        setError("Unable to load your listings");
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
-    };
+    }
 
     fetchListings();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleCancelClick = (listing) => {
@@ -83,16 +192,16 @@ export default function PosterDashboard() {
 
   const handleConfirmCancel = async () => {
     if (!selectedListing) return;
-
     setIsCanceling(true);
     try {
       await cancelListing(selectedListing.id);
-      setListings(listings.filter(l => l.id !== selectedListing.id));
+      setListings((prev) => prev.filter((l) => l.id !== selectedListing.id));
       setCancelModalOpen(false);
       setSelectedListing(null);
     } catch (err) {
-      console.error('Failed to cancel listing:', err);
-      alert('Failed to cancel listing. Please try again.');
+      console.error("Failed to cancel listing:", err);
+      alert("Failed to cancel listing. Please try again.");
+    } finally {
       setIsCanceling(false);
     }
   };
@@ -104,10 +213,24 @@ export default function PosterDashboard() {
     }
   };
 
-  const activeListings = listings.filter(l => l.status === 'active').length;
+  const activeCount = listings.filter((l) => l.status === "active").length;
+
+  const totalClaims = listings.filter((l) => l.status === "claimed").length;
+  const mealsShared = listings.reduce((acc, l) => {
+    const n = parseInt(l.quantity);
+    return acc + (isNaN(n) ? 0 : n);
+  }, 0);
+
+  const filteredListings = listings.filter((l) => {
+    if (activeFilter === "Active") return l.status === "active";
+    if (activeFilter === "Claimed") return l.status === "claimed";
+    return true;
+  });
+
+  const firstName = user?.name?.split(" ")[0] ?? "there";
 
   return (
-    <div className="min-h-screen bg-emerald-50 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F0F4F0]">
       <CancelListingModal
         isOpen={cancelModalOpen}
         listing={selectedListing}
@@ -116,40 +239,106 @@ export default function PosterDashboard() {
         onCancel={handleCloseModal}
       />
 
-      <div className="max-w-7xl mx-auto">
-        <a href="/" className="text-sm text-mid-gray inline-flex items-center gap-2">← Back to home</a>
-
-        <div className="mt-6 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-[11px] uppercase tracking-[0.18em]">POSTER DASHBOARD</div>
-            <h1 className="mt-4 text-3xl md:text-4xl font-extrabold">Poster dashboard</h1>
-            <p className="text-base md:text-lg text-mid-gray mt-2">Post surplus food, track your listings, and see how many people you've helped.</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold text-primary uppercase tracking-widest mb-2">
+              Donor Dashboard
+            </p>
+            <h1 className="text-3xl font-extrabold text-dark tracking-tight">
+              Welcome, {firstName} — manage your listings
+            </h1>
+            <p className="mt-1 text-mid-gray text-sm">
+              Post surplus food from your kitchen and track who claims it.
+            </p>
           </div>
-
-          <div className="flex-shrink-0 w-full md:w-auto">
-            <Link to="/post" className="inline-flex w-full justify-center bg-green-800 text-white px-5 py-3 rounded-full items-center gap-2 md:w-auto"><PlusCircle size={18} /> Post new food</Link>
-          </div>
+          <Link
+            to="/post"
+            className="inline-flex items-center gap-2 bg-dark hover:bg-opacity-90 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm transition whitespace-nowrap self-start"
+          >
+            <PlusCircle size={17} />
+            Post new food
+          </Link>
         </div>
 
-        <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
-          {statCard(<Package size={18} className="text-green-700" />, 'Active listings', activeListings)}
-          {statCard(<Check size={18} className="text-green-700" />, 'Total listings', listings.length)}
-          {statCard(<Leaf size={18} className="text-green-700" />, 'Posted', listings.length)}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <StatCard
+            icon={<UtensilsCrossed size={18} className="text-primary" />}
+            value={activeCount}
+            label="Active listings"
+          />
+          <StatCard
+            icon={<HandHeart size={18} className="text-primary" />}
+            value={totalClaims}
+            label="Total claims"
+          />
+          <StatCard
+            icon={<Leaf size={18} className="text-primary" />}
+            value={mealsShared}
+            label="Meals shared"
+          />
         </div>
 
-        <h2 className="mt-10 text-xl font-semibold">Your listings</h2>
+        <div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+            <h2 className="text-xl font-bold text-dark">Your listings</h2>
 
-        {isLoading && <p className="mt-4 text-mid-gray">Loading your listings...</p>}
-        {error && <p className="mt-4 text-red-600">{error}</p>}
-        {!isLoading && listings.length === 0 && <p className="mt-4 text-mid-gray">You haven't posted any listings yet. <Link to="/post" className="text-primary font-medium">Create one now</Link></p>}
-
-        {!isLoading && listings.length > 0 && (
-          <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {listings.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} onCancelClick={handleCancelClick} />
-            ))}
+            {/* Filter tabs */}
+            <div className="inline-flex items-center gap-1 bg-white border border-gray-200 rounded-full p-1">
+              {FILTERS.map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setActiveFilter(f)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
+                    activeFilter === f
+                      ? "bg-primary text-white shadow-sm"
+                      : "text-mid-gray hover:text-dark"
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
           </div>
-        )}
+
+          {isLoading && (
+            <p className="text-mid-gray text-sm">Loading your listings…</p>
+          )}
+          {error && <p className="text-red-600 text-sm">{error}</p>}
+
+          {!isLoading && filteredListings.length === 0 && (
+            <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+              <Package size={40} className="mx-auto text-gray-300 mb-3" />
+              <p className="text-dark font-semibold">No listings here yet</p>
+              <p className="text-mid-gray text-sm mt-1">
+                {activeFilter === "All"
+                  ? "Post your first listing to get started."
+                  : `You have no ${activeFilter.toLowerCase()} listings right now.`}
+              </p>
+              {activeFilter === "All" && (
+                <Link
+                  to="/post"
+                  className="inline-flex items-center gap-2 mt-4 bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-semibold"
+                >
+                  <PlusCircle size={15} />
+                  Post food now
+                </Link>
+              )}
+            </div>
+          )}
+
+          {!isLoading && filteredListings.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filteredListings.map((listing) => (
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  onCancelClick={handleCancelClick}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

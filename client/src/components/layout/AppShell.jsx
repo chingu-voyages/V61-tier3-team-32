@@ -20,6 +20,7 @@ import ClaimerDashboardPage from "../../pages/ClaimerDashboard";
 import PosterDashboard from "../../pages/PosterDashboard";
 import PostFoodForm from "../post/PostFoodForm";
 import ProtectedRoute from "../auth/ProtectedRoute";
+import AllListings from "../../pages/Listings";
 
 function NavAuth({ onOpenLogin, onOpenSignup, isMobile = false }) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
@@ -225,6 +226,7 @@ function AppShell() {
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/listings" element={<AllListings />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Protected routes */}

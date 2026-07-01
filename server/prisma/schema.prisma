@@ -66,6 +66,8 @@ model Listing {
 
   // Relations
   claims Claim[]
+  
+  @@index([status, expiresAt])
 }
 
 model Claim {

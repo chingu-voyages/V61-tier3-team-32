@@ -79,9 +79,10 @@ api.interceptors.response.use(
   },
 );
 
-export const getListings = (city) => {
-  const params = city ? { city } : {};
-  return api.get("/listings", { params });
+export const getListings = (params = {}) => {
+  // Backward-compat: allow getListings("Lagos") as well as getListings({ city, status, page, limit })
+  const query = typeof params === 'string' ? { city: params } : params;
+  return api.get('/listings', { params: query });
 };
 
 export const getMyListings = () => api.get("/listings/mine");

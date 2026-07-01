@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ShoppingBag,
@@ -26,127 +26,19 @@ import ListingCard from "./ListingCard";
 import { getListings, claimListing, getMyClaims } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 
-// Dummy data for the live feed
-const DUMMY_FEED_LISTINGS = [
-  {
-    id: 1,
-    title: "Fresh Bakery Items",
-    description: "Assorted breads and pastries from this morning's batch",
-    quantity: 15,
-    unit: "pieces",
-    expiryTime: "2026-06-26T18:00:00Z",
-    distance: 0.8,
-    donor: {
-      id: 1,
-      name: "Sunrise Bakery",
-      address: "123 Main St",
-      rating: 4.8,
-    },
-    photoUrl:
-      "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400",
-    status: "available",
-  },
-  {
-    id: 2,
-    title: "Vegetable Surplus",
-    description: "Fresh organic vegetables from local farm",
-    quantity: 25,
-    unit: "kg",
-    expiryTime: "2026-06-27T12:00:00Z",
-    distance: 1.2,
-    donor: {
-      id: 2,
-      name: "Green Valley Farm",
-      address: "456 Oak Ave",
-      rating: 4.9,
-    },
-    photoUrl:
-      "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400",
-    status: "available",
-  },
-  {
-    id: 3,
-    title: "Dairy Products",
-    description: "Milk, yogurt, and cheese nearing best before date",
-    quantity: 10,
-    unit: "liters",
-    expiryTime: "2026-06-26T22:00:00Z",
-    distance: 2.1,
-    donor: {
-      id: 3,
-      name: "Daily Fresh Dairy",
-      address: "789 Pine St",
-      rating: 4.7,
-    },
-    photoUrl:
-      "https://images.unsplash.com/photo-1628088062854-d1870b4553da?w=400",
-    status: "available",
-  },
-];
-
-// Dummy data for recent claims
-const DUMMY_RECENT_CLAIMS = [
-  {
-    id: 1,
-    status: "pending",
-    createdAt: "2026-06-25T14:30:00Z",
-    listing: {
-      id: 101,
-      title: "Fresh Fruit Basket",
-      donor: {
-        id: 4,
-        name: "Organic Market",
-      },
-    },
-  },
-  {
-    id: 2,
-    status: "confirmed",
-    createdAt: "2026-06-24T10:15:00Z",
-    listing: {
-      id: 102,
-      title: "Bread and Pastries",
-      donor: {
-        id: 1,
-        name: "Sunrise Bakery",
-      },
-    },
-  },
-  {
-    id: 3,
-    status: "pending",
-    createdAt: "2026-06-24T09:00:00Z",
-    listing: {
-      id: 103,
-      title: "Vegetable Medley",
-      donor: {
-        id: 2,
-        name: "Green Valley Farm",
-      },
-    },
-  },
-  {
-    id: 4,
-    status: "no_show",
-    createdAt: "2026-06-23T16:45:00Z",
-    listing: {
-      id: 104,
-      title: "Dairy Products",
-      donor: {
-        id: 3,
-        name: "Daily Fresh Dairy",
-      },
-    },
-  },
-];
-
 const STATUS_DISPLAY = {
   pending: {
-    label: "Ready for Pickup",
-    className: "bg-primary-light text-primary",
+    label: "Pending",
+    className: "bg-yellow-100 text-yellow-800",
   },
-  confirmed: { label: "Completed", className: "bg-gray-200 text-mid-gray" },
-  no_show: { label: "Missed", className: "bg-red-100 text-danger" },
+  confirmed: {
+    label: "Confirmed",
+    className: "bg-green-100 text-green-800",
+  },
+  no_show: {
+    label: "No Show",
+    className: "bg-red-100 text-red-800",
+  },
 };
 
 const StatCard = ({
@@ -167,91 +59,166 @@ const StatCard = ({
   </div>
 );
 
+// Helper: Get user's location (saved or browser)
+const resolveCoords = async (user) => {
+  // If user has saved coordinates, use them
+  if (user?.latitude != null && user?.longitude != null) {
+    return { lat: user.latitude, lng: user.longitude };
+  }
+
+  // Otherwise try browser geolocation
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve({});
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        resolve({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+      },
+      () => resolve({}),
+      { timeout: 3000, enableHighAccuracy: false },
+    );
+  });
+};
+
 // Main Dashboard Component
 export default function ClaimerDashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState({
-    mealsRescued: 12,
+    mealsRescued: 0,
     nearbyListings: 0,
     activeClaims: 0,
   });
   const [claims, setClaims] = useState([]);
   const [feedListings, setFeedListings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const [selectedListing, setSelectedListing] = useState(null);
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimError, setClaimError] = useState("");
+  const [justClaimed, setJustClaimed] = useState(false);
+  const [claimedListingId, setClaimedListingId] = useState(null);
+  const [viewingClaim, setViewingClaim] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function load() {
-      // Prefer the user's saved coordinates; fall back to browser
-      // geolocation if they haven't set one, so the feed can still sort
-      // by distance for a first-time user.
-      let statsData, claimsData, feedData;
+    const loadDashboard = async () => {
+      setIsLoading(true);
+      setError("");
 
-      claimsData = DUMMY_RECENT_CLAIMS;
-      feedData = DUMMY_FEED_LISTINGS;
-
-      setClaims(claimsData);
-      setFeedListings(feedData);
-
-      return;
-      const coords = await resolveCoords(user);
       try {
-        const [statsRes, claimsRes, feedRes] = await Promise.all([
-          api.get("/stats/claimer"),
-          api.get("/claims/mine"),
-          api.get("/listings", { params: { ...coords, limit: 3 } }),
+        // Get user's location
+        const coords = await resolveCoords(user);
+
+        // Fetch listings and claims in parallel
+        const [listingsRes, claimsRes] = await Promise.all([
+          getListings({ status: "active", limit: 6 }),
+          getMyClaims().catch(() => ({ data: [] })), // Don't fail if no claims yet
         ]);
-        statsData = statsRes.data;
-        claimsData = claimsRes.data;
-        feedData = feedRes.data;
+
+        if (cancelled) return;
+
+        const listings = listingsRes.data.listings || [];
+        const claimsData = claimsRes.data || [];
+
+        // Calculate stats
+        const activeClaims = claimsData.filter(
+          (claim) => claim.status === "pending",
+        ).length;
+
+        const completedClaims = claimsData.filter(
+          (claim) => claim.status === "confirmed",
+        ).length;
+
+        setStats({
+          mealsRescued: completedClaims,
+          nearbyListings: listings.length,
+          activeClaims: activeClaims,
+        });
+
+        setFeedListings(listings);
+        setClaims(claimsData);
       } catch (err) {
         console.error("Failed to load claimer dashboard:", err);
-        statsData = DUMMY_STATS;
-        claimsData = DUMMY_RECENT_CLAIMS;
-        feedData = DUMMY_FEED_LISTINGS;
+        if (!cancelled) {
+          setError("Unable to load listings. Please try again.");
+        }
       } finally {
-        if (!cancelled) setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
-      if (cancelled) return;
-      setStats(statsData);
-      setClaims(claimsData);
-      setFeedListings(feedData);
-    }
+    };
 
-    load();
+    loadDashboard();
+
     return () => {
       cancelled = true;
     };
   }, [user]);
 
+  // Handle claiming a listing
   const handleConfirmClaim = async (listing) => {
     setIsClaiming(true);
     setClaimError("");
+    setJustClaimed(false);
+
     try {
-      await api.post(`/listings/${listing.id}/claim`);
-      setSelectedListing(null);
+      await claimListing(listing.id);
+
+      // Success - show the success state
+      setJustClaimed(true);
+      setClaimedListingId(listing.id);
+
+      // Update the feed: remove the claimed listing
       setFeedListings((prev) => prev.filter((l) => l.id !== listing.id));
+
+      // Update stats
+      setStats((prev) => ({
+        ...prev,
+        activeClaims: prev.activeClaims + 1,
+        nearbyListings: Math.max(0, prev.nearbyListings - 1),
+      }));
+
+      // Refresh claims
+      try {
+        const { data: updatedClaims } = await getMyClaims();
+        setClaims(updatedClaims || []);
+      } catch (e) {
+        // Don't fail if claims refresh fails
+        console.warn("Could not refresh claims", e);
+      }
+
+      // Close modal after a moment
+      setTimeout(() => {
+        setSelectedListing(null);
+        setJustClaimed(false);
+        setClaimedListingId(null);
+      }, 2500);
     } catch (err) {
-      setClaimError(
+      const message =
         err?.response?.data?.message ||
-          "Could not claim this listing. Please try again.",
-      );
+        err?.message ||
+        "Could not claim this listing. Please try again.";
+      setClaimError(message);
+      setJustClaimed(false);
     } finally {
       setIsClaiming(false);
     }
   };
 
-  const firstName = user?.name?.split(" ")[0] ?? "";
+  const firstName = user?.name?.split(" ")[0] ?? "User";
 
   return (
     <div className="max-w-7xl mx-auto space-y-10 px-4 sm:px-6 lg:px-8 py-8">
       <div>
         <h2 className="text-3xl font-bold text-dark">
-          Welcome back, {firstName}!
+          Welcome back, {firstName}! 👋
         </h2>
         <p className="mt-1 text-mid-gray">Ready to rescue some food today?</p>
       </div>
@@ -280,30 +247,47 @@ export default function ClaimerDashboard() {
         />
       </div>
 
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700">
+          <p>{error}</p>
+        </div>
+      )}
+
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-dark">Live Feed Near You</h3>
           <Link
-            to="/claimer/feed"
-            className="text-sm font-medium text-primary hover:underline"
+            to="/listings"
+            className="text-sm font-medium text-primary hover:underline hidden"
           >
             View All
           </Link>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {!isLoading && feedListings.length === 0 && (
-            <p className="text-mid-gray sm:col-span-3">
-              No listings near you right now.
+
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : feedListings.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
+            <p className="text-mid-gray">
+              No listings available near you right now.
             </p>
-          )}
-          {feedListings.map((listing) => (
-            <ListingCard
-              key={listing.id}
-              listing={listing}
-              onClaim={setSelectedListing}
-            />
-          ))}
-        </div>
+            <p className="text-sm text-mid-gray mt-2">
+              Check back later or expand your search area.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {feedListings.slice(0, 6).map((listing) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                onClaim={setSelectedListing}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex items-start gap-3 rounded-xl border border-urgency/30 bg-urgency/10 p-5">
@@ -321,86 +305,104 @@ export default function ClaimerDashboard() {
 
       <div>
         <h3 className="text-lg font-bold text-dark mb-3">Recent Claims</h3>
-        <div className="overflow-x-auto rounded-xl border border-gray-200">
-          <table className="w-full text-sm min-w-[400px]">
-            <thead className="bg-light-gray text-mid-gray">
-              <tr>
-                <th className="text-left font-medium px-4 py-3">Item</th>
-                <th className="text-left font-medium px-4 py-3">Donor</th>
-                <th className="text-left font-medium px-4 py-3">Status</th>
-                <th className="text-right font-medium px-4 py-3">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {!isLoading && claims.length === 0 && (
+        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : claims.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-mid-gray">You haven't claimed any food yet.</p>
+              <p className="text-sm text-mid-gray mt-2">
+                Browse the live feed above to rescue your first meal!
+              </p>
+            </div>
+          ) : (
+            <table className="w-full text-sm min-w-[400px]">
+              <thead className="bg-light-gray text-mid-gray">
                 <tr>
-                  <td
-                    colSpan={4}
-                    className="px-4 py-6 text-center text-mid-gray"
-                  >
-                    You have not claimed anything yet.
-                  </td>
+                  <th className="text-left font-medium px-4 py-3">Item</th>
+                  <th className="text-left font-medium px-4 py-3">Donor</th>
+                  <th className="text-left font-medium px-4 py-3">Status</th>
+                  <th className="text-left font-medium px-4 py-3">Date</th>
+                  <th className="text-right font-medium px-4 py-3">Action</th>
                 </tr>
-              )}
-              {claims.map((claim) => {
-                const status = STATUS_DISPLAY[claim.status] ?? {
-                  label: claim.status,
-                  className: "bg-gray-200 text-mid-gray",
-                };
-                return (
-                  <tr key={claim.id} className="border-t border-gray-100">
-                    <td className="px-4 py-3 font-semibold text-dark">
-                      {claim.listing?.title}
-                    </td>
-                    <td className="px-4 py-3 text-mid-gray">
-                      {claim.listing?.donor?.name}
-                    </td>
-                    <td className="px-4 py-3 min-w-[180px]">
-                      <span
-                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${status.className}`}
-                      >
-                        <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                        {status.label}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <a
-                        href={`/listings/${claim.listingId}`}
-                        className="text-primary font-medium hover:underline"
-                      >
-                        Details
-                      </a>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {claims.slice(0, 5).map((claim) => {
+                  const status = STATUS_DISPLAY[claim.status] || {
+                    label: claim.status,
+                    className: "bg-gray-100 text-gray-700",
+                  };
+
+                  return (
+                    <tr
+                      key={claim.id}
+                      className="border-t border-gray-100 hover:bg-gray-50/50 transition"
+                    >
+                      <td className="px-4 py-3 font-semibold text-dark">
+                        {claim.listing?.title || "Unknown Item"}
+                      </td>
+                      <td className="px-4 py-3 text-mid-gray">
+                        {claim.listing?.donor?.name || "Unknown Donor"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${status.className}`}
+                        >
+                          <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                          {status.label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-mid-gray text-xs">
+                        {new Date(claim.claimedAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => setViewingClaim(claim)}
+                          className="text-primary font-medium hover:underline text-sm"
+                        >
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
 
+      {/* Claim Error Toast */}
       {claimError && (
-        <p role="alert" className="text-sm text-danger">
-          {claimError}
-        </p>
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-red-100 border border-red-200 text-red-700 px-6 py-3 rounded-xl shadow-lg z-50">
+          <p className="text-sm font-medium">{claimError}</p>
+        </div>
       )}
+
+      {/* Listing Details Modal */}
+      <ListingDetailsModal
+        listing={selectedListing}
+        onClose={() => {
+          setSelectedListing(null);
+          setJustClaimed(false);
+          setClaimedListingId(null);
+          setClaimError("");
+        }}
+        onConfirm={handleConfirmClaim}
+        isSubmitting={isClaiming}
+        claimed={justClaimed}
+        error={claimError}
+      />
+
+      <ListingDetailsModal
+        listing={viewingClaim?.listing}
+        onClose={() => setViewingClaim(null)}
+        viewOnly
+        claimStatus={viewingClaim?.status}
+      />
     </div>
   );
-}
-
-// Tries the user's saved coordinates first since they're already on the
-// User record; falls back to a one-shot browser geolocation prompt so the
-// "near you" sort still works before a user has set a location.
-function resolveCoords(user) {
-  if (user?.latitude != null && user?.longitude != null) {
-    return Promise.resolve({ lat: user.latitude, lng: user.longitude });
-  }
-  return new Promise((resolve) => {
-    if (!navigator.geolocation) return resolve({});
-    navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => resolve({}),
-      { timeout: 3000 },
-    );
-  });
 }

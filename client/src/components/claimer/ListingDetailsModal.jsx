@@ -1,15 +1,79 @@
-import { X } from "lucide-react";
+import {
+  X,
+  Users,
+  MapPin,
+  Clock,
+  FileText,
+  BadgeCheck,
+  ChevronRight,
+  Store,
+  ArrowRight,
+  ShieldX,
+} from "lucide-react";
 
 import { formatTimeLeft, getTimeLeftMinutes } from "../../lib/urgency";
+
+const CLAIM_STATUS_DISPLAY = {
+  pending: { label: "Pending", className: "bg-yellow-100 text-yellow-800" },
+  confirmed: { label: "Confirmed", className: "bg-green-100 text-green-800" },
+  no_show: { label: "No Show", className: "bg-red-100 text-red-800" },
+};
 
 export default function ListingDetailsModal({
   listing,
   onClose,
   onConfirm,
   isSubmitting,
+  claimed,
+  viewOnly = false,
+  claimStatus, 
 }) {
   if (!listing) return null;
-  const minutesLeft = getTimeLeftMinutes(listing.expiresAt);
+
+  const minutesLeft = getTimeLeftMinutes(
+    listing.expiresAt ?? listing.expiryTime,
+  );
+
+  const formatWindowTime = (iso) => {
+    if (!iso) return null;
+    return new Date(iso).toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  const pickupWindow =
+    listing.pickupStart && listing.pickupEnd
+      ? `${formatWindowTime(listing.pickupStart)} – ${formatWindowTime(listing.pickupEnd)}`
+      : listing.expiresAt
+        ? `Before ${formatWindowTime(listing.expiresAt)}`
+        : "—";
+
+  const location = listing.city ?? listing.donor?.address ?? "—";
+  const quantity = listing.quantity
+    ? `${listing.quantity}${listing.unit ? ` ${listing.unit}` : ""}`
+    : "—";
+
+  const donorName = listing.donor?.name ?? listing.kitchen ?? "Donor";
+  const isVerified = listing.donor?.rating != null || listing.verified;
+  const postedAgo = listing.createdAt
+    ? (() => {
+        const diff = Math.round(
+          (Date.now() - new Date(listing.createdAt)) / 60000,
+        );
+        if (diff < 60) return `${diff} minute${diff !== 1 ? "s" : ""} ago`;
+        const h = Math.round(diff / 60);
+        return `${h} hour${h !== 1 ? "s" : ""} ago`;
+      })()
+    : null;
+
+  const statusBadge = viewOnly
+    ? CLAIM_STATUS_DISPLAY[claimStatus] || {
+        label: claimStatus || "Active",
+        className: "bg-primary text-white",
+      }
+    : null;
 
   return (
     <div
@@ -17,64 +81,224 @@ export default function ListingDetailsModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+        className="w-full max-w-lg rounded-3xl bg-white overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between">
-          <h2 className="text-xl font-bold text-dark">{listing.title}</h2>
+        <div className="relative flex-shrink-0">
+          {listing.photoUrl ? (
+            <img
+              src={listing.photoUrl}
+              alt={listing.title}
+              className="w-full h-36 md:h-56 object-cover"
+            />
+          ) : (
+            <div className="w-full h-36 md:h-56 bg-light-gray" />
+          )}
+
+          <div className="absolute top-4 left-4 flex gap-2">
+            {viewOnly ? (
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide shadow ${statusBadge.className}`}
+              >
+                {statusBadge.label}
+              </span>
+            ) : (
+              <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold text-white uppercase tracking-wide shadow">
+                Active
+              </span>
+            )}
+            {listing.category && (
+              <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-dark shadow">
+                {listing.category}
+              </span>
+            )}
+          </div>
+
           <button
             onClick={onClose}
             aria-label="Close"
-            className="text-mid-gray hover:text-dark"
+            className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-dark shadow hover:bg-white transition"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        <p className="mt-1 text-sm text-mid-gray">{listing.donor?.name}</p>
-
-        {listing.photoUrl && (
-          <img
-            src={listing.photoUrl}
-            alt={listing.title}
-            className="mt-4 h-40 w-full rounded-xl object-cover"
-          />
-        )}
-
-        <dl className="mt-4 space-y-2 text-sm">
-          <div className="flex justify-between">
-            <dt className="text-mid-gray">Quantity</dt>
-            <dd className="font-medium text-dark">{listing.quantity}</dd>
+        <div className="overflow-y-auto flex-1">
+          <div className="px-6 pt-5 pb-3 flex items-start justify-between gap-4">
+            <div>
+              <h2 className="sm:text-xl font-bold text-dark leading-tight">
+                {listing.title}
+              </h2>
+              <div className="mt-1 flex items-center gap-1.5 text-xs sm:text-sm text-mid-gray">
+                <Store className="h-3.5 w-3.5 flex-shrink-0" />
+                <span>{donorName}</span>
+              </div>
+            </div>
+            {listing.donorId && (
+              <a
+                href={`/donors/${listing.donorId}`}
+                className="flex-shrink-0 flex items-center gap-1 text-xs sm:text-sm font-semibold text-primary hover:underline whitespace-nowrap"
+              >
+                View profile <ArrowRight className="h-4 w-4" />
+              </a>
+            )}
           </div>
-          <div className="flex justify-between">
-            <dt className="text-mid-gray">Time left</dt>
-            <dd className="font-medium text-dark">
-              {formatTimeLeft(minutesLeft)}
-            </dd>
+
+          <div className="px-6 pb-4 grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-3">
+            <InfoTile
+              icon={<Users className="h-5 w-5 text-primary" />}
+              label="QUANTITY"
+              value={quantity}
+            />
+            <InfoTile
+              icon={<MapPin className="h-5 w-5 text-primary" />}
+              label="LOCATION"
+              value={location}
+            />
+            <InfoTile
+              icon={<Clock className="h-5 w-5 text-primary" />}
+              label="PICKUP WINDOW"
+              value={pickupWindow}
+            />
           </div>
-          {listing.address && (
-            <div className="flex justify-between">
-              <dt className="text-mid-gray">Pickup address</dt>
-              <dd className="font-medium text-dark text-right">
-                {listing.address}
-              </dd>
+
+          {listing.description && (
+            <div className="px-6 pb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <FileText className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-bold text-primary">
+                  Notes for the claimer
+                </h3>
+              </div>
+              <div className="rounded-md bg-light-gray px-4 py-3 text-sm leading-relaxed">
+                {listing.description}
+              </div>
             </div>
           )}
-        </dl>
 
-        {listing.description && (
-          <p className="mt-4 text-sm text-dark">{listing.description}</p>
-        )}
+          <div className="px-6 pb-5 flex flex-col xs:flex-row xs:items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full bg-primary-light flex items-center justify-center text-primary font-bold text-sm">
+                <ShieldX className="text-primary" />
+              </div>
+              <div className="flex items-center gap-1 text-sm font-semibold text-dark">
+                Verified Donor
+              </div>
+            </div>
+            {postedAgo && (
+              <span className="text-xs text-mid-gray">Posted {postedAgo}</span>
+            )}
+          </div>
+        </div>
 
-        <button
-          type="button"
-          disabled={isSubmitting}
-          onClick={() => onConfirm(listing)}
-          className="mt-6 w-full rounded-lg bg-primary hover:bg-accent disabled:opacity-60 text-white py-2.5 font-semibold transition"
-        >
-          {isSubmitting ? "Claiming..." : "Confirm Claim"}
-        </button>
+        {/* ── Sticky footer ── */}
+        <div className="flex-shrink-0 border-t border-gray-100">
+          {viewOnly ? (
+            // Read-only footer: just a close button, no claim action
+            <div className="flex px-5 py-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 rounded-xl border border-gray-200 bg-white text-dark font-bold py-3 hover:bg-light-gray transition"
+              >
+                Close
+              </button>
+            </div>
+          ) : (
+            <>
+              {claimed && (
+                <div className="flex items-center gap-2 px-5 py-3 bg-primary-light text-primary text-xs">
+                  <svg
+                    className="h-4 w-4 flex-shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 16v-4m0-4h.01"
+                    />
+                  </svg>
+                  The donor has been notified of your claim. Please wait for the
+                  donor to approve your request.
+                </div>
+              )}
+
+              <div className="flex flex-col xs:flex-row gap-3 px-5 py-4">
+                <button
+                  type="button"
+                  disabled={isSubmitting || claimed}
+                  onClick={() => onConfirm(listing)}
+                  className="flex-1 flex items-center justify-center text-xs sm:text-sm gap-2 rounded-xl bg-primary hover:bg-accent disabled:opacity-60 text-white py-3 font-bold transition"
+                >
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  {isSubmitting
+                    ? "Claiming..."
+                    : claimed
+                      ? "Claimed!"
+                      : "Claim this food"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 text-xs sm:text-sm rounded-xl border border-gray-200 bg-white text-dark font-bold py-3 hover:bg-light-gray transition"
+                >
+                  Cancel
+                </button>
+              </div>
+
+              {!claimed && (
+                <div className="hidden xs:flex items-start gap-2 mx-5 mb-4 rounded-xl bg-[#F0F7FF] px-4 py-3 text-xs text-[#3B7DD8]">
+                  <svg
+                    className="h-4 w-4 flex-shrink-0 mt-0.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 16v-4m0-4h.01"
+                    />
+                  </svg>
+                  The donor would be notified of your claim. Please wait for the
+                  donor to approve your request.
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
+    </div>
+  );
+}
+
+function InfoTile({ icon, label, value }) {
+  return (
+    <div className="flex flex-col gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 shadow-sm">
+      {icon}
+      <p className="text-[8px] font-bold tracking-wider text-mid-gray uppercase">
+        {label}
+      </p>
+      <p className="text-xs font-bold text-dark leading-tight">{value}</p>
     </div>
   );
 }

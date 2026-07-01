@@ -11,16 +11,43 @@ import {
 import { useAuth } from "../../context/AuthContext";
 
 const NIGERIAN_CITIES = [
-  "Lagos",
-  "Abuja",
-  "Port Harcourt",
-  "Kano",
-  "Ibadan",
-  "Abeokuta",
+  "Abia",
+  "Adamawa",
+  "Akwa Ibom",
+  "Anambra",
+  "Bauchi",
+  "Bayelsa",
+  "Benue",
+  "Borno",
+  "Cross River",
+  "Delta",
+  "Ebonyi",
+  "Edo",
+  "Ekiti",
   "Enugu",
+  "FCT Abuja",
+  "Gombe",
+  "Imo",
+  "Jigawa",
   "Kaduna",
-  "Benin City",
-  "Jos",
+  "Kano",
+  "Katsina",
+  "Kebbi",
+  "Kogi",
+  "Kwara",
+  "Lagos",
+  "Nasarawa",
+  "Niger",
+  "Ogun",
+  "Ondo",
+  "Osun",
+  "Oyo",
+  "Plateau",
+  "Rivers",
+  "Sokoto",
+  "Taraba",
+  "Yobe",
+  "Zamfara",
 ];
 
 const initialFormState = {
@@ -29,6 +56,7 @@ const initialFormState = {
   password: "",
   role: "claimer",
   city: "Lagos",
+  businessName: "",
   legalAccepted: false,
 };
 
@@ -44,7 +72,7 @@ export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
   };
 
   const selectRole = (role) => () => {
-    setForm((prev) => ({ ...prev, role, legalAccepted: false }));
+    setForm((prev) => ({ ...prev, role, businessName: "", legalAccepted: false }));
   };
 
   const toggleLegalAccepted = () => {
@@ -142,11 +170,10 @@ export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
               <button
                 type="button"
                 onClick={selectRole("donor")}
-                className={`rounded-xl border p-3 text-left transition ${
-                  form.role === "donor"
-                    ? "border-primary bg-primary-light"
-                    : "border-gray-200 bg-white"
-                }`}
+                className={`rounded-xl border p-3 text-left transition ${form.role === "donor"
+                  ? "border-primary bg-primary-light"
+                  : "border-gray-200 bg-white"
+                  }`}
               >
                 <ChefHat className="h-5 w-5 text-dark mb-1" />
                 <p className="font-semibold text-sm text-dark">Post food</p>
@@ -157,11 +184,10 @@ export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
               <button
                 type="button"
                 onClick={selectRole("claimer")}
-                className={`rounded-xl border p-3 text-left transition ${
-                  form.role === "claimer"
-                    ? "border-primary bg-primary-light"
-                    : "border-gray-200 bg-white"
-                }`}
+                className={`rounded-xl border p-3 text-left transition ${form.role === "claimer"
+                  ? "border-primary bg-primary-light"
+                  : "border-gray-200 bg-white"
+                  }`}
               >
                 <ShoppingBasket className="h-5 w-5 text-dark mb-1" />
                 <p className="font-semibold text-sm text-dark">Claim food</p>
@@ -169,6 +195,27 @@ export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
               </button>
             </div>
           </div>
+
+          {/* Business name — only visible after selecting donor role */}
+          {form.role === "donor" && (
+            <div>
+              <label
+                htmlFor="businessName"
+                className="block text-sm font-medium text-dark mb-1"
+              >
+                Business / kitchen name
+                <span className="ml-1 text-xs text-mid-gray font-normal">(shown on your listings)</span>
+              </label>
+              <input
+                id="businessName"
+                type="text"
+                value={form.businessName}
+                onChange={updateField("businessName")}
+                placeholder="e.g. Mama Tee's Kitchen"
+                className="w-full rounded-lg border border-gray-200 bg-light-gray px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-primary"
+              />
+            </div>
+          )}
 
           <div>
             <label

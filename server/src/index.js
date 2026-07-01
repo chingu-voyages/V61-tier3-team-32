@@ -28,7 +28,7 @@ app.use(
         callback(null, false);
       }
     },
-    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,
   }),
 );
@@ -113,6 +113,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/listings', require('./routes/listings'));
 app.use('/api/claims', require('./routes/claims'));
 app.use('/api/stats', require('./routes/stats'));
+app.use('/api/donors', require('./routes/donors'));
 // app.use('/api/users', require('./routes/users'));
 
 if (process.env.NODE_ENV !== "production") {

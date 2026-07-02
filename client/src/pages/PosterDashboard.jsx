@@ -19,15 +19,48 @@ import ListingDetailsModal from "../components/modals/ListingDetailsModal";
 import EditListingModal from "../components/modals/EditListingModal";
 import { useAuth } from "../context/AuthContext";
 
-const PosterDashboard = () => {
+const now = Date.now();
+
+// ─── helpers ────────────────────────────────────────────────────────────────
+
+function formatExpiry(expiresAt) {
+  if (!expiresAt) return null;
+  const diffMs = new Date(expiresAt).getTime() - Date.now();
+  const diffMins = Math.round(diffMs / 60000);
+  if (diffMins <= 0) return "Expired";
+  if (diffMins < 60) return `Expires in ${diffMins}m`;
+  const hrs = Math.round(diffMins / 60);
+  return `Expires in ${hrs}h`;
+}
+
+function isExpiringSoon(expiresAt) {
+  if (!expiresAt) return false;
+  const diffMs = new Date(expiresAt).getTime() - Date.now();
+  return diffMs > 0 && diffMs <= 60 * 60 * 1000; // within 1 hour
+}
+
+// ─── stat card ──────────────────────────────────────────────────────────────
+
+function StatCard({ icon, value, label }) {
   return (
-    <PosterDashboardPage />
-  )
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex-1 min-w-0">
+      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-primary mb-4">
+        {icon}
+      </div>
+      <p className="text-3xl font-bold text-dark">{value}</p>
+      <p className="text-sm text-mid-gray mt-1">{label}</p>
+    </div>
+  );
 }
 
 // ─── listing card ───────────────────────────────────────────────────────────
 
-function ListingCard({ listing, onCancelClick, onViewDetailsClick, onEditClick }) {
+function ListingCard({
+  listing,
+  onCancelClick,
+  onViewDetailsClick,
+  onEditClick,
+}) {
   const isClaimed = listing.status === "claimed";
   const expiryLabel = formatExpiry(listing.expiresAt);
   const expiringSoon = isExpiringSoon(listing.expiresAt);

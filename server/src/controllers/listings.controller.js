@@ -210,6 +210,9 @@ const getMyListings = async (req, res) => {
   try {
     const listings = await prisma.listing.findMany({
       where: { donorId: req.user.id },
+      include: {
+        donor: true,
+      },
       orderBy: { createdAt: "desc" },
     });
     res.json(listings);

@@ -38,7 +38,7 @@ const signup = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { name, email, password, role, city } = req.body;
+  const { name, email, password, role, city, businessName } = req.body;
 
   try {
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -57,7 +57,8 @@ const signup = async (req, res) => {
         email,
         passwordHash,
         role,
-        city
+        city,
+        businessName: role === 'donor' ? (businessName || null) : null,
       }
     });
 
@@ -65,7 +66,7 @@ const signup = async (req, res) => {
 
     res.status(201).json({
       message: 'User created successfully',
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, city: user.city },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, city: user.city, businessName: user.businessName },
       token: accessToken
     });
   } catch (error) {
@@ -97,7 +98,7 @@ const login = async (req, res) => {
 
     res.json({
       message: 'Logged in successfully',
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, city: user.city },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, city: user.city, businessName: user.businessName },
       token: accessToken
     });
   } catch (error) {
@@ -290,4 +291,45 @@ const resetPassword = async (req, res) => {
   }
 };
 
-module.exports = { signup, login, logout, getMe, forgotPassword, resetPassword, refresh };
+const updateProfile = async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const { name, city, businessName } = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (city) updateData.city = city;
+    if (businessName !== undefined) updateData.businessName = businessName;
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+    });
+
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        city: updatedUser.city,
+        businessName: updatedUser.businessName,
+      },
+    });
+  } catch (error) {
+    console.error("Update Profile Error:", error);
+    res.status(500).json({ message: "Server error. Please try again." });
+  }
+};
+
+module.exports = { signup, login, logout, getMe, forgotPassword, resetPassword, refresh, updateProfile };

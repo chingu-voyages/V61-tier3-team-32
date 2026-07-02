@@ -1,4 +1,5 @@
 import { MapPin } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import {
   getTimeLeftMinutes,
@@ -28,6 +29,7 @@ const STATUS_CONFIG = {
 };
 
 export default function ListingCard({ listing, onClaim }) {
+  const navigate = useNavigate();
   const minutesLeft = getTimeLeftMinutes(listing.expiresAt);
 
   // A listing can be functionally expired (past its expiresAt) even if the
@@ -80,7 +82,12 @@ export default function ListingCard({ listing, onClaim }) {
       <div className="p-4 space-y-3">
         <div>
           <h4 className="font-bold text-dark">{listing.title}</h4>
-          <p className="text-xs text-mid-gray">{listing.donor?.name}</p>
+          <button
+            onClick={() => navigate(`/donor/${listing.donorId}`)}
+            className="text-xs text-primary hover:underline font-medium transition"
+          >
+            {listing.donor?.name}
+          </button>
         </div>
 
         <div className="flex items-center gap-1 text-xs text-mid-gray">

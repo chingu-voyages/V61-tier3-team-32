@@ -130,7 +130,7 @@ router.post(
 /**
  * @swagger
  * /api/listings/{id}:
- *   patch:
+ *   put:
  *     summary: Update an owned listing
  *     tags: [Listings]
  *     security:
@@ -151,7 +151,7 @@ router.post(
  *       200:
  *         description: Listing updated
  */
-router.patch("/:id", verifyToken, isDonor, updateListing);
+router.put('/:id', verifyToken, isDonor, updateListing);
 
 /**
  * @swagger

@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createListing, uploadListingPhoto } from '../../lib/api';
-import { PlusCircle, X } from 'lucide-react';
+import { PlusCircle, X, Store } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const MAX_IMAGE_BYTES = 100 * 1024;
 
@@ -54,6 +55,7 @@ const compressImage = async (file, maxBytes) => {
 
 export default function PostFoodForm() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const uploadInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const [photoFile, setPhotoFile] = useState(null);
@@ -72,7 +74,6 @@ export default function PostFoodForm() {
     city: 'Lagos',
     pickupStart: '',
     pickupEnd: '',
-    kitchen: '',
     description: '',
     address: '',
     expiresAt: '',
@@ -100,7 +101,7 @@ export default function PostFoodForm() {
     event.stopPropagation();
     setIsDragging(false);
     setError('');
-    
+
     const files = event.dataTransfer.files;
     if (!files || files.length === 0) {
       setError('No files dropped.');
@@ -108,7 +109,7 @@ export default function PostFoodForm() {
     }
 
     const file = files[0];
-    
+
     if (!file.type.startsWith('image/')) {
       setError('Please drop a valid image file (JPEG, PNG, WebP).');
       return;
@@ -172,7 +173,7 @@ export default function PostFoodForm() {
       return;
     }
 
-    if (!form.title || !form.quantity || !form.pickupStart || !form.pickupEnd || !form.kitchen) {
+    if (!form.title || !form.quantity || !form.pickupStart || !form.pickupEnd) {
       setError('Please fill in all required fields.');
       return;
     }
@@ -197,10 +198,10 @@ export default function PostFoodForm() {
       };
 
       const { data: listing } = await createListing(listingPayload);
-      
+
       setUploadPhase('photo');
       setUploadProgress(1);
-      
+
       await uploadListingPhoto(listing.id, photoFile, (progress) => {
         setUploadProgress(Math.max(1, progress));
       });
@@ -255,11 +256,10 @@ export default function PostFoodForm() {
               onChange={handleFileChange}
             />
             <div
-              className={`rounded-3xl border-2 border-dashed p-6 transition-all ${
-                isDragging 
-                  ? 'border-green-500 bg-green-100 scale-105' 
-                  : 'border-gray-200 bg-gray-50'
-              }`}
+              className={`rounded-3xl border-2 border-dashed p-6 transition-all ${isDragging
+                ? 'border-green-500 bg-green-100 scale-105'
+                : 'border-gray-200 bg-gray-50'
+                }`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
@@ -328,16 +328,51 @@ export default function PostFoodForm() {
                 onChange={handleChange}
                 className="mt-2 w-full rounded-2xl border border-gray-200 bg-white px-4 py-3"
               >
+                <option value="">Select city / state</option>
+                <option>Abia</option>
+                <option>Adamawa</option>
+                <option>Akwa Ibom</option>
+                <option>Anambra</option>
+                <option>Bauchi</option>
+                <option>Bayelsa</option>
+                <option>Benue</option>
+                <option>Borno</option>
+                <option>Cross River</option>
+                <option>Delta</option>
+                <option>Ebonyi</option>
+                <option>Edo</option>
+                <option>Ekiti</option>
+                <option>Enugu</option>
+                <option>FCT Abuja</option>
+                <option>Gombe</option>
+                <option>Imo</option>
+                <option>Jigawa</option>
+                <option>Kaduna</option>
+                <option>Kano</option>
+                <option>Katsina</option>
+                <option>Kebbi</option>
+                <option>Kogi</option>
+                <option>Kwara</option>
                 <option>Lagos</option>
-                <option>Abuja</option>
-                <option>Port Harcourt</option>
+                <option>Nasarawa</option>
+                <option>Niger</option>
+                <option>Ogun</option>
+                <option>Ondo</option>
+                <option>Osun</option>
+                <option>Oyo</option>
+                <option>Plateau</option>
+                <option>Rivers</option>
+                <option>Sokoto</option>
+                <option>Taraba</option>
+                <option>Yobe</option>
+                <option>Zamfara</option>
               </select>
             </label>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label className="block">
-              <span className="text-sm font-medium">Pickup start *</span>
+              <span className="text-sm font-medium text-dark">Pickup start *</span>
               <input
                 name="pickupStart"
                 type="datetime-local"
@@ -358,16 +393,13 @@ export default function PostFoodForm() {
             </label>
           </div>
 
-          <label className="block">
-            <span className="text-sm font-medium">Your kitchen / business *</span>
-            <input
-              name="kitchen"
-              value={form.kitchen}
-              onChange={handleChange}
-              placeholder="e.g. Mama Ada's Kitchen"
-              className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 focus:border-green-300 focus:outline-none"
-            />
-          </label>
+          <div>
+            <span className="text-sm font-medium">Your kitchen / business</span>
+            <div className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-700 flex items-center gap-2">
+              <Store size={18} className="text-mid-gray" />
+              {user?.businessName || user?.name || 'Your Business'}
+            </div>
+          </div>
 
           <label className="block">
             <span className="text-sm font-medium">Notes for the claimer</span>

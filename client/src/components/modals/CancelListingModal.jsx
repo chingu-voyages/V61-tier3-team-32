@@ -2,72 +2,57 @@ import React from 'react';
 import { X, AlertCircle } from 'lucide-react';
 
 export default function CancelListingModal({ isOpen, listing, onConfirm, onCancel, isLoading }) {
-  if (!isOpen) return null;
+  if (!isOpen || !listing) return null;
+
+  const transactionId = listing.id.slice(0, 8).toUpperCase();
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center overflow-y-auto z-50 px-4 py-4">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 md:p-8 animate-in fade-in zoom-in-95 max-h-[calc(100vh-4rem)] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-red-100 p-3 rounded-full">
-              <AlertCircle className="text-red-600" size={24} />
-            </div>
-            <h2 className="text-xl font-bold text-gray-900">Cancel sharing</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center overflow-y-auto z-50 px-4 py-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95">
+        {/* Header with colored background */}
+        <div className="bg-red-100 px-6 py-8 flex flex-col items-center justify-center">
+          <div className="bg-red-600 rounded-full p-3 mb-4">
+            <AlertCircle className="text-white" size={28} />
           </div>
-          <button
-            onClick={onCancel}
-            disabled={isLoading}
-            className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
-          >
-            <X size={24} />
-          </button>
         </div>
 
         {/* Content */}
-        <div className="mb-6">
-          <p className="text-gray-700 mb-4">
-            Are you sure you want to cancel sharing this listing? This action cannot be undone.
+        <div className="px-6 py-8 text-center">
+          <h2 className="text-2xl font-bold text-dark mb-4">Cancel Listing</h2>
+          <p className="text-gray-700 text-sm leading-relaxed mb-8">
+            Are you sure you want to cancel this listing? This action cannot be undone.
           </p>
-          {listing && (
-            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-              <p className="text-sm text-gray-600">Listing details:</p>
-              <p className="font-semibold text-gray-900 mt-1">{listing.title}</p>
-              <div className="flex gap-2 mt-2 flex-wrap">
-                <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full">
-                  {listing.category}
-                </span>
-                <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full">
-                  {listing.quantity}
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
 
-        {/* Actions */}
-        <div className="flex gap-3">
-          <button
-            onClick={onCancel}
-            disabled={isLoading}
-            className="flex-1 px-4 py-3 rounded-xl bg-gray-100 text-gray-900 font-medium hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Keep sharing
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={isLoading}
-            className="flex-1 px-4 py-3 rounded-xl bg-red-600 text-white font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {isLoading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Canceling...
-              </>
-            ) : (
-              'Yes, cancel'
-            )}
-          </button>
+          {/* Actions */}
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={onConfirm}
+              disabled={isLoading}
+              className="w-full px-4 py-3 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Canceling...
+                </>
+              ) : (
+                'Yes, cancel'
+              )}
+            </button>
+            <button
+              onClick={onCancel}
+              disabled={isLoading}
+              className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 text-dark font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              No, keep listing
+            </button>
+          </div>
+
+          {/* Footer */}
+          <p className="text-xs text-gray-500 mt-6 flex items-center justify-center gap-2">
+            <span>🔒</span>
+            Secure Transaction ID: {transactionId}
+          </p>
         </div>
       </div>
     </div>

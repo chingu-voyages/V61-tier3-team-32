@@ -26,7 +26,7 @@ export default function ListingDetailsModal({
   isSubmitting,
   claimed,
   viewOnly = false,
-  claimStatus, 
+  claimStatus,
 }) {
   if (!listing) return null;
 
@@ -133,6 +133,7 @@ export default function ListingDetailsModal({
                 <Store className="h-3.5 w-3.5 flex-shrink-0" />
                 <span>{donorName}</span>
               </div>
+              {listing.businessName ? <p>{listing.businessName}</p> : null}
             </div>
             {listing.donorId && (
               <a
@@ -176,15 +177,7 @@ export default function ListingDetailsModal({
             </div>
           )}
 
-          <div className="px-6 pb-5 flex flex-col xs:flex-row xs:items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-primary-light flex items-center justify-center text-primary font-bold text-sm">
-                <ShieldX className="text-primary" />
-              </div>
-              <div className="flex items-center gap-1 text-sm font-semibold text-dark">
-                Verified Donor
-              </div>
-            </div>
+          <div className="px-6 pb-5 flex flex-col xs:flex-row xs:items-center justify-end gap-2">
             {postedAgo && (
               <span className="text-xs text-mid-gray">Posted {postedAgo}</span>
             )}

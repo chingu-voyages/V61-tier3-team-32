@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createListing, uploadListingPhoto } from '../../lib/api';
-import { PlusCircle, X } from 'lucide-react';
+import { PlusCircle, X, Store } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { NIGERIAN_CITIES } from '../../constants/locations';
 
 const MAX_IMAGE_BYTES = 100 * 1024;
 
@@ -54,6 +56,7 @@ const compressImage = async (file, maxBytes) => {
 
 export default function PostFoodForm() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const uploadInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const [photoFile, setPhotoFile] = useState(null);
@@ -72,12 +75,9 @@ export default function PostFoodForm() {
     city: 'Lagos',
     pickupStart: '',
     pickupEnd: '',
-    kitchen: '',
     description: '',
     address: '',
     expiresAt: '',
-    latitude: '',
-    longitude: '',
   });
 
   const openFilePicker = () => uploadInputRef.current?.click();
@@ -100,7 +100,7 @@ export default function PostFoodForm() {
     event.stopPropagation();
     setIsDragging(false);
     setError('');
-    
+
     const files = event.dataTransfer.files;
     if (!files || files.length === 0) {
       setError('No files dropped.');
@@ -108,7 +108,7 @@ export default function PostFoodForm() {
     }
 
     const file = files[0];
-    
+
     if (!file.type.startsWith('image/')) {
       setError('Please drop a valid image file (JPEG, PNG, WebP).');
       return;
@@ -172,8 +172,13 @@ export default function PostFoodForm() {
       return;
     }
 
-    if (!form.title || !form.quantity || !form.pickupStart || !form.pickupEnd || !form.kitchen) {
+    if (!form.title || !form.quantity || !form.pickupStart || !form.pickupEnd) {
       setError('Please fill in all required fields.');
+      return;
+    }
+
+    if (new Date(form.pickupEnd) <= new Date(form.pickupStart)) {
+      setError('Pickup end time must be after the start time.');
       return;
     }
 
@@ -192,15 +197,13 @@ export default function PostFoodForm() {
         description: form.description,
         address: form.address,
         expiresAt: form.expiresAt,
-        latitude: form.latitude ? Number(form.latitude) : undefined,
-        longitude: form.longitude ? Number(form.longitude) : undefined,
       };
 
       const { data: listing } = await createListing(listingPayload);
-      
+
       setUploadPhase('photo');
       setUploadProgress(1);
-      
+
       await uploadListingPhoto(listing.id, photoFile, (progress) => {
         setUploadProgress(Math.max(1, progress));
       });
@@ -255,11 +258,10 @@ export default function PostFoodForm() {
               onChange={handleFileChange}
             />
             <div
-              className={`rounded-3xl border-2 border-dashed p-6 transition-all ${
-                isDragging 
-                  ? 'border-green-500 bg-green-100 scale-105' 
-                  : 'border-gray-200 bg-gray-50'
-              }`}
+              className={`rounded-3xl border-2 border-dashed p-6 transition-all ${isDragging
+                ? 'border-green-500 bg-green-100 scale-105'
+                : 'border-gray-200 bg-gray-50'
+                }`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
@@ -328,16 +330,17 @@ export default function PostFoodForm() {
                 onChange={handleChange}
                 className="mt-2 w-full rounded-2xl border border-gray-200 bg-white px-4 py-3"
               >
-                <option>Lagos</option>
-                <option>Abuja</option>
-                <option>Port Harcourt</option>
+                <option value="">Select city / state</option>
+                {NIGERIAN_CITIES.map((city) => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
               </select>
             </label>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label className="block">
-              <span className="text-sm font-medium">Pickup start *</span>
+              <span className="text-sm font-medium text-dark">Pickup start *</span>
               <input
                 name="pickupStart"
                 type="datetime-local"
@@ -358,16 +361,13 @@ export default function PostFoodForm() {
             </label>
           </div>
 
-          <label className="block">
-            <span className="text-sm font-medium">Your kitchen / business *</span>
-            <input
-              name="kitchen"
-              value={form.kitchen}
-              onChange={handleChange}
-              placeholder="e.g. Mama Ada's Kitchen"
-              className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 focus:border-green-300 focus:outline-none"
-            />
-          </label>
+          <div>
+            <span className="text-sm font-medium">Your kitchen / business</span>
+            <div className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-700 flex items-center gap-2">
+              <Store size={18} className="text-mid-gray" />
+              {user?.businessName || user?.name || 'Your Business'}
+            </div>
+          </div>
 
           <label className="block">
             <span className="text-sm font-medium">Notes for the claimer</span>
@@ -398,29 +398,6 @@ export default function PostFoodForm() {
                 type="datetime-local"
                 value={form.expiresAt}
                 onChange={handleChange}
-                className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 focus:border-green-300 focus:outline-none"
-              />
-            </label>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <label className="block">
-              <span className="text-sm font-medium">Latitude</span>
-              <input
-                name="latitude"
-                value={form.latitude}
-                onChange={handleChange}
-                placeholder="6.5244"
-                className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 focus:border-green-300 focus:outline-none"
-              />
-            </label>
-            <label className="block">
-              <span className="text-sm font-medium">Longitude</span>
-              <input
-                name="longitude"
-                value={form.longitude}
-                onChange={handleChange}
-                placeholder="3.3792"
                 className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 focus:border-green-300 focus:outline-none"
               />
             </label>

@@ -50,13 +50,14 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  const register = useCallback(async ({ name, email, password, role, city }) => {
+  const register = useCallback(async ({ name, email, password, role, city, businessName }) => {
     const { data } = await api.post("/auth/signup", {
       name,
       email,
       password,
       role,
       city,
+      businessName: businessName || null,
     });
     setAccessToken(data.token);
     setUser(data.user);

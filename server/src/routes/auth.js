@@ -1,6 +1,6 @@
 const express = require('express');
 const { body } = require('express-validator');
-const { signup, login, logout, getMe, forgotPassword, resetPassword, refresh } = require('../controllers/auth.controller');
+const { signup, login, logout, getMe, forgotPassword, resetPassword, refresh, updateProfile } = require('../controllers/auth.controller');
 const { verifyToken } = require('../middleware/auth.middleware');
 
 const router = express.Router();
@@ -170,5 +170,35 @@ router.post('/reset-password', [
  *         description: Invalid or expired refresh token
  */
 router.post('/refresh', refresh);
+
+/**
+ * @swagger
+ * /api/auth/profile:
+ *   put:
+ *     summary: Update user profile (name, city, businessName)
+ *     tags: [Auth]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               city:
+ *                 type: string
+ *               businessName:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ */
+router.put('/profile', verifyToken, updateProfile);
 
 module.exports = router;

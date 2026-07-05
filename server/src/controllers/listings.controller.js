@@ -27,12 +27,18 @@ const getListings = async (req, res) => {
       },
       include: {
         donor: {
-          select: { name: true, city: true }
+          select: {
+            id: true,
+            name: true,
+            businessName: true,
+            city: true,
+            role: true,
+          }
         }
       },
       orderBy: { createdAt: 'desc' }
     };
-    
+
     if (city) {
       query.where.city = {
         equals: city,
@@ -52,7 +58,7 @@ const createListing = async (req, res) => {
   try {
     const { photoUrl, ...listingData } = req.body;
     const data = { ...listingData, donorId: req.user.id };
-    
+
     if (data.expiresAt) data.expiresAt = new Date(data.expiresAt);
     if (data.pickupStart) data.pickupStart = new Date(data.pickupStart);
     if (data.pickupEnd) data.pickupEnd = new Date(data.pickupEnd);
@@ -161,6 +167,17 @@ const getMyListings = async (req, res) => {
   try {
     const listings = await prisma.listing.findMany({
       where: { donorId: req.user.id },
+      include: {
+        donor: {
+          select: {
+            id: true,
+            name: true,
+            businessName: true,
+            city: true,
+            role: true,
+          }
+        }
+      },
       orderBy: { createdAt: 'desc' }
     });
     res.json(listings);

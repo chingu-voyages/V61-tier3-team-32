@@ -107,6 +107,9 @@ export const uploadListingPhoto = (listingId, photoFile, onProgress) => {
 export const cancelListing = (listingId) =>
   api.delete(`/listings/${listingId}`);
 
+export const updateListing = (listingId, listingData) =>
+  api.put(`/listings/${listingId}`, listingData);
+
 export const claimListing = (listingId) => {
   return api.post(`/listings/${listingId}/claim`);
 };
@@ -114,5 +117,20 @@ export const claimListing = (listingId) => {
 export const getMyClaims = () => {
   return api.get("/claims/mine");
 };
+
+export const updateProfile = (profileData) =>
+  api.put("/auth/profile", profileData);
+
+export const getDonorProfile = (donorId) =>
+  api.get(`/donors/${donorId}`);
+
+export const getDonorListings = (donorId) =>
+  api.get(`/donors/${donorId}/listings`);
+
+export const getDonorRatings = (donorId) =>
+  api.get(`/donors/${donorId}/ratings`);
+
+export const getDonorStats = (donorId) =>
+  api.get(`/donors/${donorId}/stats`);
 
 export default api;

@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { getMyListings, cancelListing } from "../lib/api";
 import CancelListingModal from "../components/modals/CancelListingModal";
+import ListingDetailsModal from "../components/modals/ListingDetailsModal";
+import EditListingModal from "../components/modals/EditListingModal";
 import { useAuth } from "../context/AuthContext";
 
 const now = Date.now();
@@ -53,7 +55,7 @@ function StatCard({ icon, value, label }) {
 
 // ─── listing card ───────────────────────────────────────────────────────────
 
-function ListingCard({ listing, onCancelClick }) {
+function ListingCard({ listing, onCancelClick, onViewDetailsClick, onEditClick }) {
   const isClaimed = listing.status === "claimed";
   const expiryLabel = formatExpiry(listing.expiresAt);
   const expiringSoon = isExpiringSoon(listing.expiresAt);
@@ -126,15 +128,19 @@ function ListingCard({ listing, onCancelClick }) {
         </div>
 
         <div className="flex items-center gap-2 mt-auto pt-1">
-          {isClaimed ? (
-            <button className="flex-1 rounded-lg border border-primary py-2 text-sm font-medium text-primary hover:bg-gray-50 transition">
-              View Details
-            </button>
-          ) : (
-            <button className="flex-1 rounded-lg bg-blue-100 border border-blue-100 py-2 text-sm font-medium text-primary hover:bg-blue-200 transition">
-              Edit Listing
-            </button>
-          )}
+          <button
+            onClick={() => onViewDetailsClick(listing)}
+            className="flex-1 rounded-lg border border-primary py-2 text-sm font-medium text-primary hover:bg-gray-50 transition"
+          >
+            View Details
+          </button>
+          <button
+            onClick={() => onEditClick(listing)}
+            title="Edit listing"
+            className="flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-primary hover:text-primary hover:border-primary hover:bg-blue-50 transition"
+          >
+            <Pencil size={15} />
+          </button>
           <button
             onClick={() => onCancelClick(listing)}
             aria-label="Cancel listing"
@@ -150,7 +156,7 @@ function ListingCard({ listing, onCancelClick }) {
 
 // ─── main dashboard ─────────────────────────────────────────────────────────
 
-const FILTERS = ["All", "Active", "Claimed"];
+const FILTERS = ["All", "Active", "Claimed", "Expired"];
 
 export default function PosterDashboard() {
   const { user } = useAuth();
@@ -161,6 +167,10 @@ export default function PosterDashboard() {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState(null);
   const [isCanceling, setIsCanceling] = useState(false);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [detailsListing, setDetailsListing] = useState(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editListing, setEditListing] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -213,9 +223,50 @@ export default function PosterDashboard() {
     }
   };
 
+  const handleViewDetailsClick = (listing) => {
+    setDetailsListing(listing);
+    setDetailsModalOpen(true);
+  };
+
+  const handleDetailsClose = () => {
+    setDetailsModalOpen(false);
+    setDetailsListing(null);
+  };
+
+  const handleDetailsEditClick = (listing) => {
+    handleDetailsClose();
+    setEditListing(listing);
+    setEditModalOpen(true);
+  };
+
+  const handleDetailsCancelClick = (listing) => {
+    handleDetailsClose();
+    handleCancelClick(listing);
+  };
+
+  const handleEditModalClose = () => {
+    setEditModalOpen(false);
+    setEditListing(null);
+  };
+
+  const handleEditSuccess = async () => {
+    // Refresh listings after successful edit
+    setIsLoading(true);
+    try {
+      const { data } = await getMyListings();
+      setListings(data);
+    } catch (err) {
+      console.error("Failed to refresh listings:", err);
+    } finally {
+      setIsLoading(false);
+    }
+    handleEditModalClose();
+  };
+
   const activeCount = listings.filter((l) => l.status === "active").length;
 
   const totalClaims = listings.filter((l) => l.status === "claimed").length;
+  const expiredCount = listings.filter((l) => l.status === "expired").length;
   const mealsShared = listings.reduce((acc, l) => {
     const n = parseInt(l.quantity);
     return acc + (isNaN(n) ? 0 : n);
@@ -224,6 +275,7 @@ export default function PosterDashboard() {
   const filteredListings = listings.filter((l) => {
     if (activeFilter === "Active") return l.status === "active";
     if (activeFilter === "Claimed") return l.status === "claimed";
+    if (activeFilter === "Expired") return l.status === "expired";
     return true;
   });
 
@@ -231,6 +283,21 @@ export default function PosterDashboard() {
 
   return (
     <div className="min-h-screen bg-[#F0F4F0]">
+      <EditListingModal
+        isOpen={editModalOpen}
+        listing={editListing}
+        onClose={handleEditModalClose}
+        onSuccess={handleEditSuccess}
+        isLoading={isCanceling}
+      />
+      <ListingDetailsModal
+        isOpen={detailsModalOpen}
+        listing={detailsListing}
+        onClose={handleDetailsClose}
+        onEditClick={handleDetailsEditClick}
+        onCancelClick={handleDetailsCancelClick}
+        isLoading={isCanceling}
+      />
       <CancelListingModal
         isOpen={cancelModalOpen}
         listing={selectedListing}
@@ -334,6 +401,11 @@ export default function PosterDashboard() {
                   key={listing.id}
                   listing={listing}
                   onCancelClick={handleCancelClick}
+                  onViewDetailsClick={handleViewDetailsClick}
+                  onEditClick={(listing) => {
+                    setEditListing(listing);
+                    setEditModalOpen(true);
+                  }}
                 />
               ))}
             </div>

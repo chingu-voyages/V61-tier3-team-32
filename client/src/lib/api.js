@@ -47,6 +47,8 @@ api.interceptors.response.use(
     const isAuthRequest =
       config?.url?.includes("/auth/login") ||
       config?.url?.includes("/auth/signup") ||
+      config?.url?.includes("/auth/forgot-password") ||
+      config?.url?.includes("/auth/reset-password") ||
       config?.url?.includes("/auth/refresh");
 
     // Only attempt refresh for 401 errors that:
@@ -79,9 +81,10 @@ api.interceptors.response.use(
   },
 );
 
-export const getListings = (city) => {
-  const params = city ? { city } : {};
-  return api.get("/listings", { params });
+export const getListings = (params = {}) => {
+  // Backward-compat: allow getListings("Lagos") as well as getListings({ city, status, page, limit })
+  const query = typeof params === 'string' ? { city: params } : params;
+  return api.get('/listings', { params: query });
 };
 
 export const getMyListings = () => api.get("/listings/mine");
@@ -120,6 +123,27 @@ export const getMyClaims = () => {
 
 export const updateProfile = (profileData) =>
   api.put("/auth/profile", profileData);
+
+export const uploadProfilePhoto = (photoFile, onProgress) => {
+  const formData = new FormData();
+  formData.append("photo", photoFile, photoFile.name || "photo.jpg");
+  return api.post("/auth/profile/photo", formData, {
+    onUploadProgress: (progressEvent) => {
+      if (onProgress) {
+        const percentCompleted = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total,
+        );
+        onProgress(percentCompleted);
+      }
+    },
+  });
+};
+
+export const forgotPassword = (email) =>
+  api.post("/auth/forgot-password", { email });
+
+export const resetPassword = ({ token, password }) =>
+  api.post("/auth/reset-password", { token, password });
 
 export const getDonorProfile = (donorId) =>
   api.get(`/donors/${donorId}`);

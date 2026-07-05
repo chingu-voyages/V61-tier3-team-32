@@ -1,23 +1,57 @@
 const nodemailer = require("nodemailer");
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: process.env.SMTP_SECURE === "true",
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+function hasSmtpConfig() {
+  return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+}
+
+function createTransporter() {
+  const port = Number(process.env.SMTP_PORT) || 587;
+
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port,
+    secure: process.env.SMTP_SECURE === "true",
+    family: Number(process.env.SMTP_FAMILY) || 4,
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
 /**
  * Send a password reset email with the provided reset link.
  */
 async function sendPasswordResetEmail({ to, name, resetUrl }) {
-  const firstName = name?.split(" ")[0] || "there";
+  if (!hasSmtpConfig()) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("SMTP is not configured for password reset emails");
+    }
+
+    console.warn(
+      `[password reset] SMTP is not configured. Reset link for ${to}: ${resetUrl}`,
+    );
+    return;
+  }
+
+  const firstName = escapeHtml(name?.split(" ")[0] || "there");
+  const safeResetUrl = escapeHtml(resetUrl);
+  const from = process.env.SMTP_FROM || `"FoodRescue" <${process.env.SMTP_USER}>`;
+  const transporter = createTransporter();
 
   await transporter.sendMail({
-    from: `"FoodRescue" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+    from,
     to,
     subject: "Reset your FoodRescue password",
     text: `Hi ${firstName},\n\nClick the link below to reset your password. It expires in 1 hour.\n\n${resetUrl}\n\nIf you did not request this, you can safely ignore this email.\n\n— The FoodRescue Team`,
@@ -30,7 +64,7 @@ async function sendPasswordResetEmail({ to, name, resetUrl }) {
         <p style="color:#6B7280;font-size:15px;line-height:1.6;margin-bottom:24px;">
           Hi ${firstName}, we received a request to reset the password for your FoodRescue account. Click the button below to choose a new one.
         </p>
-        <a href="${resetUrl}"
+        <a href="${safeResetUrl}"
            style="display:inline-block;background:#166534;color:#fff;padding:12px 28px;border-radius:12px;font-weight:700;font-size:15px;text-decoration:none;margin-bottom:24px;">
           Reset my password
         </a>

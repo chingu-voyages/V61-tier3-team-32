@@ -1,25 +1,30 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import { Clock, MapPin, Star } from "lucide-react";
-import { getListings } from '../../lib/api';
+
+import { getListings } from "../../lib/api";
 
 export default function LiveFeedSection() {
   const filters = ["All", "Lagos", "Abuja", "Port Harcourt", "Ibadan"];
   const [listings, setListings] = useState([]);
   const [selectedCity, setSelectedCity] = useState("All");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchListings = async () => {
       setIsLoading(true);
-      setError('');
+      setError("");
       try {
-        const city = selectedCity === "All" ? null : selectedCity;
-        const { data } = await getListings(city);
-        setListings(data);
+        const city = selectedCity === "All" ? undefined : selectedCity;
+        const { data } = await getListings({
+          city,
+          status: "active",
+          limit: 6,
+        });
+        setListings(data.listings);
       } catch (err) {
-        console.error('Failed to fetch listings:', err);
-        setError('Unable to load listings');
+        console.error("Failed to fetch listings:", err);
+        setError("Unable to load listings");
       } finally {
         setIsLoading(false);
       }
@@ -42,14 +47,14 @@ export default function LiveFeedSection() {
 
   const getCategoryBg = (category) => {
     switch (category) {
-      case 'Hot Meal':
-        return 'bg-red-100 text-red-800';
-      case 'Snacks':
-        return 'bg-blue-100 text-blue-800';
-      case 'Bakery':
-        return 'bg-yellow-100 text-yellow-800';
+      case "Hot Meal":
+        return "bg-red-100 text-red-800";
+      case "Snacks":
+        return "bg-blue-100 text-blue-800";
+      case "Bakery":
+        return "bg-yellow-100 text-yellow-800";
       default:
-        return 'bg-green-100 text-green-800';
+        return "bg-green-100 text-green-800";
     }
   };
 
@@ -57,8 +62,12 @@ export default function LiveFeedSection() {
     <section className="py-20 bg-[#FAFAFA]" id="feed">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-10">
-          <h2 className="text-sm font-bold tracking-wider text-primary uppercase mb-2">Live feed</h2>
-          <h3 className="text-3xl md:text-4xl font-bold text-dark tracking-tight">Available right now near you</h3>
+          <h2 className="text-sm font-bold tracking-wider text-primary uppercase mb-2">
+            Live feed
+          </h2>
+          <h3 className="text-3xl md:text-4xl font-bold text-dark tracking-tight">
+            Available right now near you
+          </h3>
         </div>
 
         <div className="flex overflow-x-auto gap-2 pb-4 mb-8 scrollbar-hide">
@@ -80,12 +89,19 @@ export default function LiveFeedSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading && <p className="text-mid-gray">Loading listings...</p>}
           {error && <p className="text-red-600">{error}</p>}
-          {!isLoading && listings.length === 0 && <p className="text-mid-gray">No listings available</p>}
-          
+          {!isLoading && listings.length === 0 && (
+            <p className="text-mid-gray">No listings available</p>
+          )}
+
           {listings.map((listing) => (
-            <div key={listing.id} className="bg-white rounded-3xl p-6 border border-gray-100 hover:shadow-lg transition-shadow flex flex-col">
+            <div
+              key={listing.id}
+              className="bg-white rounded-3xl p-6 border border-gray-100 hover:shadow-lg transition-shadow flex flex-col"
+            >
               <div className="flex justify-between items-start mb-4">
-                <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getCategoryBg(listing.category)}`}>
+                <span
+                  className={`px-3 py-1 text-xs font-semibold rounded-full ${getCategoryBg(listing.category)}`}
+                >
                   {listing.category}
                 </span>
                 <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
@@ -94,10 +110,10 @@ export default function LiveFeedSection() {
                 </span>
               </div>
 
-              <h4 className="text-xl font-bold text-dark mb-2">{listing.title}</h4>
-              <p className="text-mid-gray text-sm mb-6">
-                {listing.quantity}
-              </p>
+              <h4 className="text-xl font-bold text-dark mb-2">
+                {listing.title}
+              </h4>
+              <p className="text-mid-gray text-sm mb-6">{listing.quantity}</p>
 
               <div className="flex items-center justify-between text-sm text-mid-gray mb-8">
                 <div className="flex items-center gap-1.5">

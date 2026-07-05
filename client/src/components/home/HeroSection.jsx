@@ -1,7 +1,11 @@
 import { PlusCircle, Search, Star, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 
-export default function HeroSection() {
+import { useAuth } from "../../context/AuthContext";
+
+export default function HeroSection({ onFindFood, onPostSurplusFood }) {
+  const { isAuthenticated } = useAuth();
+
   return (
     <section className="relative pt-12 pb-20 lg:pt-20 lg:pb-28 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -38,21 +42,31 @@ export default function HeroSection() {
               FoodRescue is the fastest way for restaurants, bakeries and home kitchens across Lagos, Abuja, Port Harcourt and beyond to pass on surplus meals to neighbours before the clock runs out.
             </motion.p>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
-              className="flex flex-col sm:flex-row gap-4 mb-10"
-            >
-              <button className="flex items-center justify-center gap-2 bg-primary hover:bg-opacity-90 text-white px-6 py-3.5 rounded-xl font-medium shadow-sm transition">
-                <PlusCircle size={20} />
-                Post surplus food
-              </button>
-              <button className="flex items-center justify-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-dark px-6 py-3.5 rounded-xl font-medium shadow-sm transition">
-                <Search size={20} />
-                Find food near me
-              </button>
-            </motion.div>
+            {!isAuthenticated && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.5 }}
+                className="flex flex-col sm:flex-row gap-4 mb-10"
+              >
+                <button
+                  type="button"
+                  onClick={onPostSurplusFood}
+                  className="flex items-center justify-center gap-2 bg-primary hover:bg-opacity-90 text-white px-6 py-3.5 rounded-xl font-medium shadow-sm transition"
+                >
+                  <PlusCircle size={20} />
+                  Post surplus food
+                </button>
+                <button
+                  type="button"
+                  onClick={onFindFood}
+                  className="flex items-center justify-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-dark px-6 py-3.5 rounded-xl font-medium shadow-sm transition"
+                >
+                  <Search size={20} />
+                  Find food near me
+                </button>
+              </motion.div>
+            )}
 
             <motion.div
               initial={{ opacity: 0 }}

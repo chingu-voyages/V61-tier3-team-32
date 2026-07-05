@@ -13,6 +13,10 @@ const getDonorProfile = async (req, res) => {
         city: true,
         role: true,
         createdAt: true,
+        photoUrl: true,
+        story: true,
+        businessName: true,
+        businessType: true,
       },
     });
 

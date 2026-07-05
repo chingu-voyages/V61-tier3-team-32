@@ -1,56 +1,97 @@
-const prisma = require('../lib/prisma');
-const { getSupabaseClient } = require('../lib/supabase');
+const prisma = require("../lib/prisma");
+const { getSupabaseClient } = require("../lib/supabase");
 
-const listingPhotoBucket = process.env.SUPABASE_LISTING_PHOTOS_BUCKET || 'listing-photos';
+const listingPhotoBucket =
+  process.env.SUPABASE_LISTING_PHOTOS_BUCKET || "listing-photos";
 
 const uploadErrorResponse = (message, error) => {
   const response = { message };
 
-  if (process.env.NODE_ENV !== 'production' && error) {
+  if (process.env.NODE_ENV !== "production" && error) {
     response.details = error.message || String(error);
   }
 
   return response;
 };
 
-const getFileExtension = (filename = '') => {
-  const extension = filename.split('.').pop();
-  return extension && extension !== filename ? extension.toLowerCase() : 'jpg';
+const getFileExtension = (filename = "") => {
+  const extension = filename.split(".").pop();
+  return extension && extension !== filename ? extension.toLowerCase() : "jpg";
 };
 
+const isInvalidPickupWindow = (pickupStart, pickupEnd) =>
+  pickupStart && pickupEnd && pickupEnd <= pickupStart;
+
 const getListings = async (req, res) => {
-  const { city } = req.query;
+  const { city, status, excludeExpired, page = "1", limit = "12" } = req.query;
+
+  const pageNum = Math.max(1, parseInt(page, 10) || 1);
+  const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 12));
+  const skip = (pageNum - 1) * limitNum;
+
   try {
-    const query = {
-      where: {
-        status: 'active'
-      },
-      include: {
-        donor: {
-          select: {
-            id: true,
-            name: true,
-            businessName: true,
-            city: true,
-            role: true,
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    };
+    // Lazily expire anything past its window before reading.
+    await prisma.listing.updateMany({
+      where: { status: "active", expiresAt: { lt: new Date() } },
+      data: { status: "expired" },
+    });
+
+    const where = {};
+
+    const validStatuses = ["active", "claimed", "expired", "completed"];
+    if (status && status !== "all") {
+      const statuses = status
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => validStatuses.includes(s));
+      if (statuses.length === 0) {
+        return res.status(400).json({
+          message: `Invalid status. Must be one of: all, ${validStatuses.join(", ")}`,
+        });
+      }
+      where.status = statuses.length === 1 ? statuses[0] : { in: statuses };
+    }
+    // status omitted or "all" => no status filter, every listing is returned
 
     if (city) {
-      query.where.city = {
-        equals: city,
-        mode: 'insensitive'
-      };
+      where.city = { equals: city, mode: "insensitive" };
     }
 
-    const listings = await prisma.listing.findMany(query);
-    res.json(listings);
+    if (excludeExpired === "true") {
+      where.expiresAt = { gt: new Date() };
+    }
+
+    const [listings, total] = await prisma.$transaction([
+      prisma.listing.findMany({
+        where,
+        include: {
+          donor: {
+            select: {
+              id: true,
+              name: true,
+              businessName: true,
+              city: true,
+              role: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limitNum,
+      }),
+      prisma.listing.count({ where }),
+    ]);
+
+    res.json({
+      listings,
+      page: pageNum,
+      limit: limitNum,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / limitNum)),
+    });
   } catch (error) {
-    console.error('Get Listings Error:', error);
-    res.status(500).json({ message: 'Server error fetching listings' });
+    console.error("Get Listings Error:", error);
+    res.status(500).json({ message: "Server error fetching listings" });
   }
 };
 
@@ -62,12 +103,19 @@ const createListing = async (req, res) => {
     if (data.expiresAt) data.expiresAt = new Date(data.expiresAt);
     if (data.pickupStart) data.pickupStart = new Date(data.pickupStart);
     if (data.pickupEnd) data.pickupEnd = new Date(data.pickupEnd);
+    if (!data.expiresAt && data.pickupEnd) data.expiresAt = data.pickupEnd;
+
+    if (isInvalidPickupWindow(data.pickupStart, data.pickupEnd)) {
+      return res
+        .status(400)
+        .json({ message: "Pickup end date must be after pickup start date" });
+    }
 
     const listing = await prisma.listing.create({ data });
     res.status(201).json(listing);
   } catch (error) {
-    console.error('Create Listing Error:', error);
-    res.status(500).json({ message: 'Server error creating listing' });
+    console.error("Create Listing Error:", error);
+    res.status(500).json({ message: "Server error creating listing" });
   }
 };
 
@@ -75,14 +123,16 @@ const uploadListingPhoto = async (req, res) => {
   const { id } = req.params;
 
   if (!req.file) {
-    return res.status(400).json({ message: 'Photo file is required' });
+    return res.status(400).json({ message: "Photo file is required" });
   }
 
   try {
     const listing = await prisma.listing.findUnique({ where: { id } });
-    if (!listing) return res.status(404).json({ message: 'Listing not found' });
+    if (!listing) return res.status(404).json({ message: "Listing not found" });
     if (listing.donorId !== req.user.id) {
-      return res.status(403).json({ message: 'Not authorized to update this listing' });
+      return res
+        .status(403)
+        .json({ message: "Not authorized to update this listing" });
     }
 
     const supabase = getSupabaseClient();
@@ -97,10 +147,15 @@ const uploadListingPhoto = async (req, res) => {
       });
 
     if (uploadError) {
-      console.error('Supabase Upload Error:', uploadError);
+      console.error("Supabase Upload Error:", uploadError);
       return res
         .status(500)
-        .json(uploadErrorResponse('Server error uploading listing photo', uploadError));
+        .json(
+          uploadErrorResponse(
+            "Server error uploading listing photo",
+            uploadError,
+          ),
+        );
     }
 
     const { data: publicUrlData } = supabase.storage
@@ -113,15 +168,15 @@ const uploadListingPhoto = async (req, res) => {
     });
 
     res.json({
-      message: 'Listing photo uploaded successfully',
+      message: "Listing photo uploaded successfully",
       photoUrl: updatedListing.photoUrl,
       listing: updatedListing,
     });
   } catch (error) {
-    console.error('Upload Listing Photo Error:', error);
+    console.error("Upload Listing Photo Error:", error);
     res
       .status(500)
-      .json(uploadErrorResponse('Server error uploading listing photo', error));
+      .json(uploadErrorResponse("Server error uploading listing photo", error));
   }
 };
 
@@ -129,22 +184,33 @@ const updateListing = async (req, res) => {
   const { id } = req.params;
   try {
     const listing = await prisma.listing.findUnique({ where: { id } });
-    if (!listing) return res.status(404).json({ message: 'Listing not found' });
-    if (listing.donorId !== req.user.id) return res.status(403).json({ message: 'Not authorized to update this listing' });
+    if (!listing) return res.status(404).json({ message: "Listing not found" });
+    if (listing.donorId !== req.user.id)
+      return res
+        .status(403)
+        .json({ message: "Not authorized to update this listing" });
 
     const data = { ...req.body };
     if (data.expiresAt) data.expiresAt = new Date(data.expiresAt);
     if (data.pickupStart) data.pickupStart = new Date(data.pickupStart);
     if (data.pickupEnd) data.pickupEnd = new Date(data.pickupEnd);
 
+    const pickupStart = data.pickupStart || listing.pickupStart;
+    const pickupEnd = data.pickupEnd || listing.pickupEnd;
+    if (isInvalidPickupWindow(pickupStart, pickupEnd)) {
+      return res
+        .status(400)
+        .json({ message: "Pickup end date must be after pickup start date" });
+    }
+
     const updated = await prisma.listing.update({
       where: { id },
-      data
+      data,
     });
     res.json(updated);
   } catch (error) {
-    console.error('Update Listing Error:', error);
-    res.status(500).json({ message: 'Server error updating listing' });
+    console.error("Update Listing Error:", error);
+    res.status(500).json({ message: "Server error updating listing" });
   }
 };
 
@@ -152,14 +218,17 @@ const deleteListing = async (req, res) => {
   const { id } = req.params;
   try {
     const listing = await prisma.listing.findUnique({ where: { id } });
-    if (!listing) return res.status(404).json({ message: 'Listing not found' });
-    if (listing.donorId !== req.user.id) return res.status(403).json({ message: 'Not authorized to delete this listing' });
+    if (!listing) return res.status(404).json({ message: "Listing not found" });
+    if (listing.donorId !== req.user.id)
+      return res
+        .status(403)
+        .json({ message: "Not authorized to delete this listing" });
 
     await prisma.listing.delete({ where: { id } });
-    res.json({ message: 'Listing deleted successfully' });
+    res.json({ message: "Listing deleted successfully" });
   } catch (error) {
-    console.error('Delete Listing Error:', error);
-    res.status(500).json({ message: 'Server error deleting listing' });
+    console.error("Delete Listing Error:", error);
+    res.status(500).json({ message: "Server error deleting listing" });
   }
 };
 
@@ -175,15 +244,15 @@ const getMyListings = async (req, res) => {
             businessName: true,
             city: true,
             role: true,
-          }
-        }
+          },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     });
     res.json(listings);
   } catch (error) {
-    console.error('Get My Listings Error:', error);
-    res.status(500).json({ message: 'Server error fetching your listings' });
+    console.error("Get My Listings Error:", error);
+    res.status(500).json({ message: "Server error fetching your listings" });
   }
 };
 
@@ -193,5 +262,5 @@ module.exports = {
   uploadListingPhoto,
   updateListing,
   deleteListing,
-  getMyListings
+  getMyListings,
 };

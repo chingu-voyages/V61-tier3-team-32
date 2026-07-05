@@ -80,6 +80,10 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const updateUser = useCallback((updatedFields) => {
+    setUser((prev) => prev ? { ...prev, ...updatedFields } : prev);
+  }, []);
+
   const value = {
     user,
     isAuthenticated: Boolean(user),
@@ -87,6 +91,7 @@ export function AuthProvider({ children }) {
     register,
     login,
     logout,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

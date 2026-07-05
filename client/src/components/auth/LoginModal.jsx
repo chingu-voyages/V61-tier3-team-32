@@ -2,7 +2,7 @@ import { useState } from "react";
 import { X, LogIn, Eye, EyeOff, ArrowLeft, Mail, CheckCircle2 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
-import api from "../../lib/api";
+import { forgotPassword } from "../../lib/api";
 
 export default function LoginModal({ onClose, onSwitchToSignup, onSuccess }) {
   const { login } = useAuth();
@@ -61,7 +61,7 @@ export default function LoginModal({ onClose, onSwitchToSignup, onSuccess }) {
 
     setIsSendingReset(true);
     try {
-      await api.post("/auth/forgot-password", { email: forgotEmail });
+      await forgotPassword(forgotEmail);
       setView("forgot-sent");
     } catch (err) {
       // Even if the email doesn't exist, show success for security (don't reveal emails)

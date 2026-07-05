@@ -65,7 +65,15 @@ const getListings = async (req, res) => {
       prisma.listing.findMany({
         where,
         include: {
-          donor: { select: { name: true, city: true } },
+          donor: {
+            select: {
+              id: true,
+              name: true,
+              businessName: true,
+              city: true,
+              role: true,
+            },
+          },
         },
         orderBy: { createdAt: "desc" },
         skip,
@@ -229,7 +237,15 @@ const getMyListings = async (req, res) => {
     const listings = await prisma.listing.findMany({
       where: { donorId: req.user.id },
       include: {
-        donor: true,
+        donor: {
+          select: {
+            id: true,
+            name: true,
+            businessName: true,
+            city: true,
+            role: true,
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
     });

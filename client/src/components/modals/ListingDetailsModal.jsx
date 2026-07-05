@@ -32,19 +32,19 @@ export default function ListingDetailsModal({
     if (!listing.pickupStart || !listing.pickupEnd) return null;
     const startTime = formatTime(listing.pickupStart);
     const endTime = formatTime(listing.pickupEnd);
-    
+
     // Check if it's today
     const today = new Date();
     const startDate = new Date(listing.pickupStart);
     const isToday = today.toDateString() === startDate.toDateString();
-    
+
     return isToday ? `${startTime} - ${endTime} today` : `${startTime} - ${endTime}`;
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center overflow-y-auto z-50 px-4 py-4">
       <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden animate-in fade-in zoom-in-95 max-h-[calc(100vh-2rem)]">
-        
+
         {/* Image Section with Title Overlay */}
         <div className="relative h-72 bg-gray-200 overflow-hidden">
           {listing.photoUrl ? (
@@ -175,7 +175,6 @@ export default function ListingDetailsModal({
           )}
         </div>
 
-        {/* Actions */}
         <div className="border-t border-gray-200 p-6 md:p-8 bg-white flex gap-3">
           <button
             onClick={() => onCancelClick(listing)}

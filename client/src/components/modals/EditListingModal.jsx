@@ -61,7 +61,7 @@ export default function EditListingModal({ isOpen, listing, onClose, onSuccess, 
     }
 
     if (new Date(form.pickupEnd) <= new Date(form.pickupStart)) {
-      setError('Pickup end date must be after pickup start date');
+      setError('Pickup end time must be after the start time');
       return;
     }
 

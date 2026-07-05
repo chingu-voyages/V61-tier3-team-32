@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createListing, uploadListingPhoto } from '../../lib/api';
 import { PlusCircle, X, Store } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { NIGERIAN_CITIES } from '../../constants/locations';
 
 const MAX_IMAGE_BYTES = 100 * 1024;
 
@@ -175,7 +176,7 @@ export default function PostFoodForm() {
     }
 
     if (new Date(form.pickupEnd) <= new Date(form.pickupStart)) {
-      setError('Pickup end date must be after pickup start date.');
+      setError('Pickup end time must be after the start time.');
       return;
     }
 
@@ -326,43 +327,9 @@ export default function PostFoodForm() {
                 className="mt-2 w-full rounded-2xl border border-gray-200 bg-white px-4 py-3"
               >
                 <option value="">Select city / state</option>
-                <option>Abia</option>
-                <option>Adamawa</option>
-                <option>Akwa Ibom</option>
-                <option>Anambra</option>
-                <option>Bauchi</option>
-                <option>Bayelsa</option>
-                <option>Benue</option>
-                <option>Borno</option>
-                <option>Cross River</option>
-                <option>Delta</option>
-                <option>Ebonyi</option>
-                <option>Edo</option>
-                <option>Ekiti</option>
-                <option>Enugu</option>
-                <option>FCT Abuja</option>
-                <option>Gombe</option>
-                <option>Imo</option>
-                <option>Jigawa</option>
-                <option>Kaduna</option>
-                <option>Kano</option>
-                <option>Katsina</option>
-                <option>Kebbi</option>
-                <option>Kogi</option>
-                <option>Kwara</option>
-                <option>Lagos</option>
-                <option>Nasarawa</option>
-                <option>Niger</option>
-                <option>Ogun</option>
-                <option>Ondo</option>
-                <option>Osun</option>
-                <option>Oyo</option>
-                <option>Plateau</option>
-                <option>Rivers</option>
-                <option>Sokoto</option>
-                <option>Taraba</option>
-                <option>Yobe</option>
-                <option>Zamfara</option>
+                {NIGERIAN_CITIES.map((city) => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
               </select>
             </label>
           </div>

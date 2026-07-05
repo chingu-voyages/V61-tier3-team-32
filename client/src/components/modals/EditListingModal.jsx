@@ -60,6 +60,11 @@ export default function EditListingModal({ isOpen, listing, onClose, onSuccess, 
       return;
     }
 
+    if (new Date(form.pickupEnd) <= new Date(form.pickupStart)) {
+      setError('Pickup end time must be after the start time');
+      return;
+    }
+
     if (!form.expiresAt) {
       setError('Expiry time is required');
       return;

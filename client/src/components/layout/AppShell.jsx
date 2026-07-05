@@ -48,12 +48,18 @@ function NavAuth({ onOpenLogin, onOpenSignup, isMobile = false }) {
           Dashboard
         </Link>
         <span className="hidden lg:block text-gray-300">|</span>
-        <Link
-          to={`/donor/${user?.id}`}
-          className="font-medium text-dark text-sm hover:text-primary transition"
-        >
-          Hi, {displayName}
-        </Link>
+        {user?.role === "donor" ? (
+          <Link
+            to={`/donor/${user?.id}`}
+            className="font-medium text-dark text-sm hover:text-primary transition"
+          >
+            Hi, {displayName}
+          </Link>
+        ) : (
+          <span className="font-medium text-dark text-sm">
+            Hi, {displayName}
+          </span>
+        )}
         <button
           onClick={logout}
           className={`text-sm font-medium text-mid-gray hover:text-dark transition ${isMobile ? "w-full text-left px-4 py-2 bg-gray-50 rounded-xl" : ""}`}

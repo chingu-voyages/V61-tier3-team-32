@@ -193,14 +193,6 @@ export default function ListingDetailsModal({
             <Edit size={16} />
             Edit Listing
           </button>
-          <button
-            onClick={onClose}
-            disabled={isLoading}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 border-gray-300 text-dark font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <X size={16} />
-            Cancel
-          </button>
         </div>
       </div>
     </div>

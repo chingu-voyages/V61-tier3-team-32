@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Lock, CheckCircle2, AlertCircle } from "lucide-react";
-import api from "../lib/api";
+import { resetPassword } from "../lib/api";
 
-export default function ResetPassword() {
+export default function ResetPassword({ onOpenLogin }) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const token = searchParams.get("token");
@@ -18,9 +18,10 @@ export default function ResetPassword() {
 
   useEffect(() => {
     if (!token) {
-      navigate("/", { replace: true });
+      setError("This reset link is missing a token. Please request a new password reset link.");
+      setStatus("error");
     }
-  }, [token, navigate]);
+  }, [token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,11 +38,12 @@ export default function ResetPassword() {
 
     setIsSubmitting(true);
     try {
-      await api.post("/auth/reset-password", { token, password });
+      await resetPassword({ token, password });
       setStatus("success");
     } catch (err) {
       const message =
         err?.response?.data?.message ||
+        err?.response?.data?.errors?.[0]?.msg ||
         "This reset link is invalid or has expired.";
       setError(message);
       setStatus("error");
@@ -62,10 +64,36 @@ export default function ResetPassword() {
             Your password has been successfully reset. You can now log in with your new credentials.
           </p>
           <button
-            onClick={() => navigate("/")}
+            onClick={() => {
+              navigate("/", { replace: true });
+              onOpenLogin?.();
+            }}
             className="w-full bg-primary hover:bg-opacity-90 text-white py-2.5 rounded-xl font-semibold transition"
           >
-            Back to home
+            Log in now
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "error" && !token) {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white rounded-2xl p-8 shadow-xl text-center">
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-5">
+            <AlertCircle className="h-8 w-8 text-red-500" />
+          </div>
+          <h2 className="text-2xl font-bold text-dark mb-3">Invalid reset link</h2>
+          <p className="text-mid-gray text-sm mb-6">{error}</p>
+          <button
+            onClick={() => {
+              navigate("/", { replace: true });
+              onOpenLogin?.();
+            }}
+            className="w-full bg-primary hover:bg-opacity-90 text-white py-2.5 rounded-xl font-semibold transition"
+          >
+            Request a new link
           </button>
         </div>
       </div>

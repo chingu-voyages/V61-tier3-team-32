@@ -4,6 +4,7 @@ const { validationResult } = require("express-validator");
 
 const prisma = require("../lib/prisma");
 const { sendPasswordResetEmail } = require("../lib/mailer");
+const { getSupabaseClient } = require("../lib/supabase");
 const {
   signAccessToken,
   signRefreshToken,
@@ -12,6 +13,20 @@ const {
   REFRESH_TOKEN_EXPIRES_MS,
 } = require("../lib/tokens");
 const { setRefreshCookie, clearRefreshCookie } = require("../lib/cookies");
+
+const profilePhotoBucket =
+  process.env.SUPABASE_PROFILE_PHOTOS_BUCKET || "profile-photos";
+
+const normalizeEmail = (email) => email.trim().toLowerCase();
+
+const buildResetUrl = (rawToken) => {
+  const clientUrl = (process.env.CLIENT_URL || "http://localhost:5173").replace(
+    /\/$/,
+    "",
+  );
+
+  return `${clientUrl}/reset-password?token=${encodeURIComponent(rawToken)}`;
+};
 
 // Issues a fresh access+refresh pair for a user, persists the refresh
 // token's hash, and sets the httpOnly cookie on the response. Returns just
@@ -38,7 +53,8 @@ const signup = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { name, email, password, role, city, businessName } = req.body;
+  const { name, password, role, city, businessName } = req.body;
+  const email = normalizeEmail(req.body.email);
 
   try {
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -66,7 +82,7 @@ const signup = async (req, res) => {
 
     res.status(201).json({
       message: 'User created successfully',
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, city: user.city, businessName: user.businessName },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, city: user.city, businessName: user.businessName, createdAt: user.createdAt, phoneNumber: user.phoneNumber, story: user.story, businessType: user.businessType, photoUrl: user.photoUrl },
       token: accessToken
     });
   } catch (error) {
@@ -81,7 +97,8 @@ const login = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { email, password } = req.body;
+  const { password } = req.body;
+  const email = normalizeEmail(req.body.email);
 
   try {
     const user = await prisma.user.findUnique({ where: { email } });
@@ -98,7 +115,7 @@ const login = async (req, res) => {
 
     res.json({
       message: 'Logged in successfully',
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, city: user.city, businessName: user.businessName },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, city: user.city, businessName: user.businessName, createdAt: user.createdAt, phoneNumber: user.phoneNumber, story: user.story, businessType: user.businessType, photoUrl: user.photoUrl },
       token: accessToken
     });
   } catch (error) {
@@ -163,6 +180,13 @@ const refresh = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        city: user.city,
+        businessName: user.businessName,
+        phoneNumber: user.phoneNumber,
+        story: user.story,
+        businessType: user.businessType,
+        photoUrl: user.photoUrl,
+        createdAt: user.createdAt,
       },
       accessToken,
     });
@@ -208,11 +232,12 @@ const getMe = (req, res) => {
 // and emails a reset link to the user. Always returns 200 so we never reveal
 // whether a given email is registered.
 const forgotPassword = async (req, res) => {
-  const { email } = req.body;
-
-  if (!email || !email.includes("@")) {
-    return res.status(400).json({ message: "Valid email is required" });
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
   }
+
+  const email = normalizeEmail(req.body.email);
 
   try {
     const user = await prisma.user.findUnique({ where: { email } });
@@ -232,7 +257,7 @@ const forgotPassword = async (req, res) => {
         data: { userId: user.id, tokenHash, expiresAt },
       });
 
-      const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${rawToken}`;
+      const resetUrl = buildResetUrl(rawToken);
 
       await sendPasswordResetEmail({
         to: user.email,
@@ -251,6 +276,11 @@ const forgotPassword = async (req, res) => {
 
 // Validates the reset token and updates the user's password.
 const resetPassword = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   const { token, password } = req.body;
 
   if (!token || !password || password.length < 8) {
@@ -297,7 +327,7 @@ const updateProfile = async (req, res) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const { name, city, businessName } = req.body;
+  const { name, city, businessName, phoneNumber, story, businessType } = req.body;
 
   try {
     const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -307,8 +337,11 @@ const updateProfile = async (req, res) => {
 
     const updateData = {};
     if (name) updateData.name = name;
-    if (city) updateData.city = city;
+    if (city !== undefined) updateData.city = city;
     if (businessName !== undefined) updateData.businessName = businessName;
+    if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
+    if (story !== undefined) updateData.story = story;
+    if (businessType !== undefined) updateData.businessType = businessType;
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },
@@ -324,6 +357,10 @@ const updateProfile = async (req, res) => {
         role: updatedUser.role,
         city: updatedUser.city,
         businessName: updatedUser.businessName,
+        phoneNumber: updatedUser.phoneNumber,
+        story: updatedUser.story,
+        businessType: updatedUser.businessType,
+        photoUrl: updatedUser.photoUrl,
       },
     });
   } catch (error) {
@@ -332,4 +369,68 @@ const updateProfile = async (req, res) => {
   }
 };
 
-module.exports = { signup, login, logout, getMe, forgotPassword, resetPassword, refresh, updateProfile };
+const uploadProfilePhoto = async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  if (!req.file) {
+    return res.status(400).json({ message: "Photo file is required" });
+  }
+
+  try {
+    const supabase = getSupabaseClient();
+    const ext = (req.file.originalname.split('.').pop() || 'jpg').toLowerCase();
+    const filePath = `profiles/${userId}/${Date.now()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(profilePhotoBucket)
+      .upload(filePath, req.file.buffer, {
+        contentType: req.file.mimetype,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error("Supabase Profile Photo Upload Error:", uploadError);
+      const statusCode = Number(uploadError.statusCode || uploadError.status);
+      if (statusCode === 413) {
+        return res.status(400).json({
+          message: "Profile photo is too large. Please choose a smaller image.",
+        });
+      }
+
+      return res.status(500).json({
+        message: "Server error uploading profile photo",
+        ...(process.env.NODE_ENV !== "production" && {
+          details: uploadError.message || String(uploadError),
+        }),
+      });
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from(profilePhotoBucket)
+      .getPublicUrl(filePath);
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { photoUrl: publicUrlData.publicUrl },
+    });
+
+    res.json({
+      message: "Profile photo uploaded successfully",
+      photoUrl: updatedUser.photoUrl,
+    });
+  } catch (error) {
+    console.error("Upload Profile Photo Error:", error);
+    res.status(500).json({
+      message: "Server error uploading profile photo",
+      ...(process.env.NODE_ENV !== "production" && {
+        details: error.message || String(error),
+      }),
+    });
+  }
+};
+
+module.exports = { signup, login, logout, getMe, forgotPassword, resetPassword, refresh, updateProfile, uploadProfilePhoto };
+

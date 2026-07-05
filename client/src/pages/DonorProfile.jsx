@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Star, MapPin, Calendar, Utensils, Leaf } from 'lucide-react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, MessageCircle, Star, MapPin, Calendar, Utensils, Leaf, Settings } from 'lucide-react';
 import { getDonorProfile, getDonorListings, getDonorRatings, getDonorStats } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function DonorProfile() {
   const { donorId } = useParams();
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
+  const isOwner = currentUser?.id === donorId;
   const [donor, setDonor] = useState(null);
   const [listings, setListings] = useState([]);
   const [reviews, setReviews] = useState([]);
@@ -84,7 +87,8 @@ export default function DonorProfile() {
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'short',
+      month: 'long',
+      day: 'numeric'
     });
   };
 
@@ -119,31 +123,52 @@ export default function DonorProfile() {
           <div className="flex items-start justify-between mb-6">
             <div className="flex items-start gap-6">
               {/* Avatar */}
-              <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-primary to-green-700 flex items-center justify-center text-white flex-shrink-0">
-                <Utensils size={64} />
+              <div className="w-32 h-32 rounded-2xl overflow-hidden bg-gradient-to-br from-primary to-green-700 flex items-center justify-center text-white flex-shrink-0 shadow-sm border-4 border-white">
+                {donor.photoUrl ? (
+                  <img src={donor.photoUrl} alt={donor.businessName || donor.name} className="w-full h-full object-cover" />
+                ) : (
+                  <Utensils size={64} />
+                )}
               </div>
 
               {/* Profile Info */}
-              <div className="flex-1">
-                <h1 className="text-4xl font-bold text-gray-900 mb-2">{donor.name}</h1>
-                <div className="flex items-center gap-4 text-gray-600 mb-4">
+              <div className="flex-1 mt-1">
+                <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight leading-none mb-1">
+                  {donor.businessName || donor.name}
+                </h1>
+                {donor.businessName && (
+                  <p className="text-lg text-gray-500 font-medium mb-3">{donor.name}</p>
+                )}
+                <div className="flex items-center gap-5 text-gray-600 mb-4 font-medium text-sm">
                   <div className="flex items-center gap-1">
                     <MapPin size={16} />
                     <span>{donor.city}</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Calendar size={16} />
-                    <span>Joined in {formatDate(donor.createdAt).split(' ')[1]}</span>
+                  <div className="flex items-center gap-1.5">
+                    <Calendar size={16} className="text-primary" />
+                    <span>Joined in {new Date(donor.createdAt).getFullYear()}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Message Button */}
-            <button className="px-6 py-2 border-2 border-gray-900 text-gray-900 rounded-lg hover:bg-gray-50 font-semibold flex items-center gap-2">
-              <MessageCircle size={18} />
-              Message
-            </button>
+            {/* Action buttons */}
+            <div className="flex items-center gap-3">
+              {isOwner ? (
+                <Link
+                  to="/settings"
+                  className="px-5 py-2 border-2 border-primary text-primary rounded-lg hover:bg-green-50 font-semibold flex items-center gap-2 transition"
+                >
+                  <Settings size={16} />
+                  Edit Profile
+                </Link>
+              ) : (
+                <button className="px-6 py-2 border-2 border-gray-900 text-gray-900 rounded-lg hover:bg-gray-50 font-semibold flex items-center gap-2">
+                  <MessageCircle size={18} />
+                  Message
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Stats Cards */}
@@ -193,11 +218,17 @@ export default function DonorProfile() {
                 <h2 className="text-lg font-bold text-gray-900">About the Donor</h2>
               </div>
               <p className="text-gray-600 text-sm leading-relaxed mb-6">
-                A community member committed to reducing food waste and supporting neighbors in need. Join us in making a difference!
+                {donor.story || "A community member committed to reducing food waste and supporting neighbors in need. Join us in making a difference!"}
               </p>
-              <div>
-                <p className="text-sm font-semibold text-gray-900">Joined</p>
-                <p className="text-gray-700 mt-1">{formatDate(donor.createdAt)}</p>
+              <div className="flex justify-between items-center bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <div>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Joined</p>
+                  <p className="text-gray-900 font-medium text-sm">{formatDate(donor.createdAt)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Active Listings</p>
+                  <p className="text-gray-900 font-medium text-sm">{listings.length}</p>
+                </div>
               </div>
             </div>
 

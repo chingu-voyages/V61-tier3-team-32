@@ -60,9 +60,14 @@ const initialFormState = {
   legalAccepted: false,
 };
 
-export default function SignupModal({ onClose, onSwitchToLogin, onSuccess }) {
+export default function SignupModal({
+  onClose,
+  onSwitchToLogin,
+  onSuccess,
+  initialRole = "claimer",
+}) {
   const { register } = useAuth();
-  const [form, setForm] = useState(initialFormState);
+  const [form, setForm] = useState({ ...initialFormState, role: initialRole });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);

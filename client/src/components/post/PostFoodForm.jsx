@@ -75,10 +75,6 @@ export default function PostFoodForm() {
     pickupStart: '',
     pickupEnd: '',
     description: '',
-    address: '',
-    expiresAt: '',
-    latitude: '',
-    longitude: '',
   });
 
   const openFilePicker = () => uploadInputRef.current?.click();
@@ -178,6 +174,11 @@ export default function PostFoodForm() {
       return;
     }
 
+    if (new Date(form.pickupEnd) <= new Date(form.pickupStart)) {
+      setError('Pickup end date must be after pickup start date.');
+      return;
+    }
+
     setIsSubmitting(true);
     setUploadPhase('listing');
     setUploadProgress(0);
@@ -191,10 +192,6 @@ export default function PostFoodForm() {
         pickupStart: form.pickupStart,
         pickupEnd: form.pickupEnd,
         description: form.description,
-        address: form.address,
-        expiresAt: form.expiresAt,
-        latitude: form.latitude ? Number(form.latitude) : undefined,
-        longitude: form.longitude ? Number(form.longitude) : undefined,
       };
 
       const { data: listing } = await createListing(listingPayload);
@@ -411,52 +408,6 @@ export default function PostFoodForm() {
               className="mt-2 w-full min-h-[140px] rounded-2xl border border-gray-200 px-4 py-3 focus:border-green-300 focus:outline-none"
             />
           </label>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <label className="block">
-              <span className="text-sm font-medium">Address</span>
-              <input
-                name="address"
-                value={form.address}
-                onChange={handleChange}
-                placeholder="e.g. 12 Market Road"
-                className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 focus:border-green-300 focus:outline-none"
-              />
-            </label>
-            <label className="block">
-              <span className="text-sm font-medium">Expires at</span>
-              <input
-                name="expiresAt"
-                type="datetime-local"
-                value={form.expiresAt}
-                onChange={handleChange}
-                className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 focus:border-green-300 focus:outline-none"
-              />
-            </label>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <label className="block">
-              <span className="text-sm font-medium">Latitude</span>
-              <input
-                name="latitude"
-                value={form.latitude}
-                onChange={handleChange}
-                placeholder="6.5244"
-                className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 focus:border-green-300 focus:outline-none"
-              />
-            </label>
-            <label className="block">
-              <span className="text-sm font-medium">Longitude</span>
-              <input
-                name="longitude"
-                value={form.longitude}
-                onChange={handleChange}
-                placeholder="3.3792"
-                className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 focus:border-green-300 focus:outline-none"
-              />
-            </label>
-          </div>
 
           {error && <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 

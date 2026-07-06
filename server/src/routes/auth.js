@@ -1,7 +1,8 @@
 const express = require('express');
 const { body } = require('express-validator');
-const { signup, login, logout, getMe, forgotPassword, resetPassword, refresh, updateProfile } = require('../controllers/auth.controller');
+const { signup, login, logout, getMe, forgotPassword, resetPassword, refresh, updateProfile, uploadProfilePhoto } = require('../controllers/auth.controller');
 const { verifyToken } = require('../middleware/auth.middleware');
+const { singleImageUpload } = require('../middleware/upload.middleware');
 
 const router = express.Router();
 
@@ -126,7 +127,9 @@ router.get('/me', verifyToken, getMe);
  *       200:
  *         description: Reset link sent (always 200 to avoid email enumeration)
  */
-router.post('/forgot-password', forgotPassword);
+router.post('/forgot-password', [
+  body('email').isEmail().withMessage('Valid email is required'),
+], forgotPassword);
 
 /**
  * @swagger
@@ -200,5 +203,31 @@ router.post('/refresh', refresh);
  *         description: User not found
  */
 router.put('/profile', verifyToken, updateProfile);
+
+/**
+ * @swagger
+ * /api/auth/profile/photo:
+ *   post:
+ *     summary: Upload user profile photo
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - photo
+ *             properties:
+ *               photo:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Profile photo uploaded successfully
+ */
+router.post('/profile/photo', verifyToken, singleImageUpload('photo'), uploadProfilePhoto);
 
 module.exports = router;

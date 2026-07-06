@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Github,
   Linkedin,
+  Settings,
 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
@@ -21,6 +22,7 @@ import ResetPassword from "../../pages/ResetPassword";
 import ClaimerDashboardPage from "../../pages/ClaimerDashboard";
 import PosterDashboard from "../../pages/PosterDashboard";
 import DonorProfile from "../../pages/DonorProfile";
+import AccountSettings from "../../pages/AccountSettings";
 import PostFoodForm from "../post/PostFoodForm";
 import ProtectedRoute from "../auth/ProtectedRoute";
 import AllListings from "../../pages/Listings";
@@ -60,6 +62,14 @@ function NavAuth({ onOpenLogin, onOpenSignup, isMobile = false }) {
             Hi, {displayName}
           </span>
         )}
+        <Link
+          to="/settings"
+          title="Account Settings"
+          className={`flex items-center gap-2 text-mid-gray hover:text-primary transition ${isMobile ? "w-full px-4 py-2 bg-gray-50 rounded-xl text-sm font-medium" : ""}`}
+        >
+          <Settings size={16} />
+          {isMobile && <span>Settings</span>}
+        </Link>
         <button
           onClick={logout}
           className={`text-sm font-medium text-mid-gray hover:text-dark transition ${isMobile ? "w-full text-left px-4 py-2 bg-gray-50 rounded-xl" : ""}`}
@@ -95,6 +105,7 @@ function NavAuth({ onOpenLogin, onOpenSignup, isMobile = false }) {
 function AppShell() {
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
+  const [signupInitialRole, setSignupInitialRole] = useState("claimer");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [toast, setToast] = useState(null);
@@ -122,9 +133,11 @@ function AppShell() {
     setShowLogin(true);
   };
 
-  const openSignup = () => {
+  const openSignup = (role = "claimer") => {
+    const nextRole = role === "donor" || role === "claimer" ? role : "claimer";
     setMobileMenuOpen(false);
     setShowLogin(false);
+    setSignupInitialRole(nextRole);
     setShowSignup(true);
   };
 
@@ -155,7 +168,7 @@ function AppShell() {
 
   const navLinks = [
     { name: "How it works", href: "#how" },
-    { name: "Live feed", href: "#feed" },
+    // { name: "Live feed", href: "#feed" },
     { name: "Impact", href: "#impact" },
     { name: "Communities", href: "#communities" },
   ];
@@ -165,7 +178,8 @@ function AppShell() {
     location.pathname.startsWith("/dashboard") ||
     location.pathname.startsWith("/donor") ||
     location.pathname.startsWith("/claimer") ||
-    location.pathname.startsWith("/post");
+    location.pathname.startsWith("/post") ||
+    location.pathname.startsWith("/settings");
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-dark">
@@ -243,9 +257,20 @@ function AppShell() {
       {/* Main Content */}
       <main>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route
+            path="/"
+            element={
+              <Home
+                onFindFood={() => openSignup("claimer")}
+                onPostSurplusFood={() => openSignup("donor")}
+              />
+            }
+          />
           <Route path="/listings" element={<AllListings />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route
+            path="/reset-password"
+            element={<ResetPassword onOpenLogin={openLogin} />}
+          />
           <Route
             path="/donor/:donorId"
             element={
@@ -280,6 +305,14 @@ function AppShell() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <AccountSettings />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </main>
 
@@ -297,6 +330,7 @@ function AppShell() {
           onClose={closeAll}
           onSwitchToLogin={openLogin}
           onSuccess={handleSignupSuccess}
+          initialRole={signupInitialRole}
         />
       )}
 

@@ -76,8 +76,6 @@ export default function PostFoodForm() {
     pickupStart: '',
     pickupEnd: '',
     description: '',
-    address: '',
-    expiresAt: '',
   });
 
   const openFilePicker = () => uploadInputRef.current?.click();
@@ -195,8 +193,6 @@ export default function PostFoodForm() {
         pickupStart: form.pickupStart,
         pickupEnd: form.pickupEnd,
         description: form.description,
-        address: form.address,
-        expiresAt: form.expiresAt,
       };
 
       const { data: listing } = await createListing(listingPayload);
@@ -379,29 +375,6 @@ export default function PostFoodForm() {
               className="mt-2 w-full min-h-[140px] rounded-2xl border border-gray-200 px-4 py-3 focus:border-green-300 focus:outline-none"
             />
           </label>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <label className="block">
-              <span className="text-sm font-medium">Address</span>
-              <input
-                name="address"
-                value={form.address}
-                onChange={handleChange}
-                placeholder="e.g. 12 Market Road"
-                className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 focus:border-green-300 focus:outline-none"
-              />
-            </label>
-            <label className="block">
-              <span className="text-sm font-medium">Expires at</span>
-              <input
-                name="expiresAt"
-                type="datetime-local"
-                value={form.expiresAt}
-                onChange={handleChange}
-                className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 focus:border-green-300 focus:outline-none"
-              />
-            </label>
-          </div>
 
           {error && <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 

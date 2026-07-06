@@ -1,6 +1,10 @@
 import { Map } from "lucide-react";
 
-export default function CommunitiesSection() {
+import { useAuth } from "../../context/AuthContext";
+
+export default function CommunitiesSection({ onBrowseFeed, onPostFoodNow }) {
+  const { isAuthenticated } = useAuth();
+
   const regions = [
     {
       title: "Lagos & the South-West",
@@ -55,14 +59,24 @@ export default function CommunitiesSection() {
             <p className="text-white/90 mb-10 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed">
               Post it in two minutes. Someone nearby will be grateful — and the planet will breathe a little easier.
             </p>
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-              <button className="w-full sm:w-auto bg-white text-dark hover:bg-gray-50 px-8 py-3.5 rounded-xl font-bold shadow-sm transition">
-                Post food now
-              </button>
-              <button className="w-full sm:w-auto bg-transparent border-2 border-white/80 text-white hover:bg-white/10 px-8 py-3.5 rounded-xl font-bold transition">
-                Browse the feed
-              </button>
-            </div>
+            {!isAuthenticated && (
+              <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+                <button
+                  type="button"
+                  onClick={onPostFoodNow}
+                  className="w-full sm:w-auto bg-white text-dark hover:bg-gray-50 px-8 py-3.5 rounded-xl font-bold shadow-sm transition"
+                >
+                  Post food now
+                </button>
+                <button
+                  type="button"
+                  onClick={onBrowseFeed}
+                  className="w-full sm:w-auto bg-transparent border-2 border-white/80 text-white hover:bg-white/10 px-8 py-3.5 rounded-xl font-bold transition"
+                >
+                  Browse the feed
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

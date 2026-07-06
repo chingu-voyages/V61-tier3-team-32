@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   PlusCircle,
@@ -81,6 +81,7 @@ function ListingCard({
           <img
             src={listing.photoUrl}
             alt={listing.title}
+            loading="lazy"
             className="w-full h-full object-cover"
           />
         ) : (
@@ -162,6 +163,7 @@ function ListingCard({
 // ─── main dashboard ─────────────────────────────────────────────────────────
 
 const FILTERS = ["All", "Active", "Claimed", "Expired"];
+const LISTINGS_BATCH_SIZE = 6;
 
 export default function PosterDashboard() {
   const { user } = useAuth();
@@ -176,6 +178,9 @@ export default function PosterDashboard() {
   const [detailsListing, setDetailsListing] = useState(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editListing, setEditListing] = useState(null);
+  const [visibleListingCount, setVisibleListingCount] =
+    useState(LISTINGS_BATCH_SIZE);
+  const loadMoreRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -277,12 +282,47 @@ export default function PosterDashboard() {
     return acc + (isNaN(n) ? 0 : n);
   }, 0);
 
-  const filteredListings = listings.filter((l) => {
-    if (activeFilter === "Active") return l.status === "active";
-    if (activeFilter === "Claimed") return l.status === "claimed";
-    if (activeFilter === "Expired") return l.status === "expired";
-    return true;
-  });
+  const filteredListings = useMemo(
+    () =>
+      listings.filter((l) => {
+        if (activeFilter === "Active") return l.status === "active";
+        if (activeFilter === "Claimed") return l.status === "claimed";
+        if (activeFilter === "Expired") return l.status === "expired";
+        return true;
+      }),
+    [activeFilter, listings]
+  );
+
+  const visibleListings = filteredListings.slice(0, visibleListingCount);
+  const hasMoreListings = visibleListingCount < filteredListings.length;
+
+  useEffect(() => {
+    setVisibleListingCount(LISTINGS_BATCH_SIZE);
+  }, [activeFilter, listings]);
+
+  useEffect(() => {
+    if (!hasMoreListings) return undefined;
+
+    const target = loadMoreRef.current;
+    if (!target) return undefined;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisibleListingCount((count) =>
+            Math.min(count + LISTINGS_BATCH_SIZE, filteredListings.length)
+          );
+        }
+      },
+      { rootMargin: "240px" }
+    );
+
+    observer.observe(target);
+
+    return () => {
+      observer.unobserve(target);
+    };
+  }, [filteredListings.length, hasMoreListings, visibleListingCount]);
 
   const firstName = user?.name?.split(" ")[0] ?? "there";
 
@@ -400,20 +440,31 @@ export default function PosterDashboard() {
           )}
 
           {!isLoading && filteredListings.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filteredListings.map((listing) => (
-                <ListingCard
-                  key={listing.id}
-                  listing={listing}
-                  onCancelClick={handleCancelClick}
-                  onViewDetailsClick={handleViewDetailsClick}
-                  onEditClick={(listing) => {
-                    setEditListing(listing);
-                    setEditModalOpen(true);
-                  }}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {visibleListings.map((listing) => (
+                  <ListingCard
+                    key={listing.id}
+                    listing={listing}
+                    onCancelClick={handleCancelClick}
+                    onViewDetailsClick={handleViewDetailsClick}
+                    onEditClick={(listing) => {
+                      setEditListing(listing);
+                      setEditModalOpen(true);
+                    }}
+                  />
+                ))}
+              </div>
+
+              {hasMoreListings && (
+                <div
+                  ref={loadMoreRef}
+                  className="py-6 text-center text-sm text-mid-gray"
+                >
+                  Loading more listings...
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

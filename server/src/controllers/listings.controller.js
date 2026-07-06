@@ -19,6 +19,9 @@ const getFileExtension = (filename = "") => {
   return extension && extension !== filename ? extension.toLowerCase() : "jpg";
 };
 
+const isInvalidPickupWindow = (pickupStart, pickupEnd) =>
+  pickupStart && pickupEnd && pickupEnd <= pickupStart;
+
 const getListings = async (req, res) => {
   const { city, status, excludeExpired, page = "1", limit = "12" } = req.query;
 
@@ -62,7 +65,15 @@ const getListings = async (req, res) => {
       prisma.listing.findMany({
         where,
         include: {
-          donor: { select: { name: true, city: true } },
+          donor: {
+            select: {
+              id: true,
+              name: true,
+              businessName: true,
+              city: true,
+              role: true,
+            },
+          },
         },
         orderBy: { createdAt: "desc" },
         skip,
@@ -92,6 +103,13 @@ const createListing = async (req, res) => {
     if (data.expiresAt) data.expiresAt = new Date(data.expiresAt);
     if (data.pickupStart) data.pickupStart = new Date(data.pickupStart);
     if (data.pickupEnd) data.pickupEnd = new Date(data.pickupEnd);
+    if (!data.expiresAt && data.pickupEnd) data.expiresAt = data.pickupEnd;
+
+    if (isInvalidPickupWindow(data.pickupStart, data.pickupEnd)) {
+      return res
+        .status(400)
+        .json({ message: "Pickup end date must be after pickup start date" });
+    }
 
     const listing = await prisma.listing.create({ data });
     res.status(201).json(listing);
@@ -177,6 +195,14 @@ const updateListing = async (req, res) => {
     if (data.pickupStart) data.pickupStart = new Date(data.pickupStart);
     if (data.pickupEnd) data.pickupEnd = new Date(data.pickupEnd);
 
+    const pickupStart = data.pickupStart || listing.pickupStart;
+    const pickupEnd = data.pickupEnd || listing.pickupEnd;
+    if (isInvalidPickupWindow(pickupStart, pickupEnd)) {
+      return res
+        .status(400)
+        .json({ message: "Pickup end date must be after pickup start date" });
+    }
+
     const updated = await prisma.listing.update({
       where: { id },
       data,
@@ -211,7 +237,15 @@ const getMyListings = async (req, res) => {
     const listings = await prisma.listing.findMany({
       where: { donorId: req.user.id },
       include: {
-        donor: { select: { name: true, city: true, businessName: true } },
+        donor: {
+          select: {
+            id: true,
+            name: true,
+            businessName: true,
+            city: true,
+            role: true,
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
     });

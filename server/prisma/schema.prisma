@@ -25,6 +25,14 @@ enum ClaimStatus {
   no_show
 }
 
+enum NotificationType {
+  new_claim
+  pickup_reminder
+  listing_archived
+  milestone
+  general
+}
+
 model User {
   id           String   @id @default(uuid())
   name         String   @db.VarChar(100)
@@ -49,6 +57,7 @@ model User {
   claims               Claim[]               @relation("ClaimerClaims")
   refreshTokens        RefreshToken[]
   passwordResetTokens  PasswordResetToken[]
+  notifications        Notification[]
 }
 
 model Listing {
@@ -95,6 +104,26 @@ model Rating {
   claim   Claim   @relation(fields: [claimId], references: [id])
   score   Int // 1 to 5
   comment String? @db.Text
+}
+
+model Notification {
+  id              String           @id @default(uuid())
+  userId          String
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type            NotificationType @default(general)
+  title           String           @db.VarChar(120)
+  message         String           @db.Text
+  actionLabel     String?          @db.VarChar(80)
+  actionUrl       String?          @db.Text
+  relatedClaimId  String?
+  relatedListingId String?
+  metadata        Json?
+  readAt          DateTime?
+  createdAt       DateTime         @default(now())
+
+  @@index([userId, readAt, createdAt])
+  @@index([relatedClaimId])
+  @@index([relatedListingId])
 }
 
 model RefreshToken {

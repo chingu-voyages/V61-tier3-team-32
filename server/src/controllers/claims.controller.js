@@ -18,16 +18,67 @@ const createClaim = async (req, res) => {
         .status(400)
         .json({ message: "You have already claimed this listing" });
 
-    const claim = await prisma.claim.create({
-      data: {
-        listingId,
-        claimerId: req.user.id,
-      },
-    });
+    const claim = await prisma.$transaction(async (tx) => {
+      const createdClaim = await tx.claim.create({
+        data: {
+          listingId,
+          claimerId: req.user.id,
+        },
+      });
 
-    await prisma.listing.update({
-      where: { id: listingId },
-      data: { status: "claimed" },
+      await tx.listing.update({
+        where: { id: listingId },
+        data: { status: "claimed" },
+      });
+
+      const minutesUntilPickupEnds = Math.max(
+        0,
+        Math.round((new Date(listing.pickupEnd).getTime() - Date.now()) / 60000),
+      );
+
+      await Promise.all([
+        tx.notification.create({
+          data: {
+            userId: listing.donorId,
+            type: "new_claim",
+            title: "New claim!",
+            message: `${req.user.name} just claimed ${listing.quantity} of ${listing.title} from your kitchen.`,
+            actionLabel: "View Details",
+            actionUrl: "/donor",
+            relatedClaimId: createdClaim.id,
+            relatedListingId: listing.id,
+            metadata: {
+              recipientRole: "donor",
+              claimerId: req.user.id,
+              claimerName: req.user.name,
+              listingTitle: listing.title,
+              quantity: listing.quantity,
+            },
+          },
+        }),
+        tx.notification.create({
+          data: {
+            userId: req.user.id,
+            type: "pickup_reminder",
+            title: "Pickup Reminder",
+            message: `Reminder: Pick up your ${listing.title} from ${listing.address || listing.city || "the donor"} before the pickup window closes.`,
+            actionLabel: "View Claim",
+            actionUrl: "/claimer",
+            relatedClaimId: createdClaim.id,
+            relatedListingId: listing.id,
+            metadata: {
+              recipientRole: "claimer",
+              donorId: listing.donorId,
+              listingTitle: listing.title,
+              quantity: listing.quantity,
+              pickupEnd: listing.pickupEnd,
+              minutesLeft: minutesUntilPickupEnds,
+            },
+          },
+        }),
+      ]);
+
+      return createdClaim;
     });
 
     res.status(201).json(claim);

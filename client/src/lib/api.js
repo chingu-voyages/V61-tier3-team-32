@@ -121,6 +121,18 @@ export const getMyClaims = () => {
   return api.get("/claims/mine");
 };
 
+export const getNotifications = (params = {}) =>
+  api.get("/notifications", { params });
+
+export const getUnreadNotificationCount = () =>
+  api.get("/notifications/unread-count");
+
+export const markNotificationRead = (notificationId) =>
+  api.patch(`/notifications/${notificationId}/read`);
+
+export const markAllNotificationsRead = () =>
+  api.patch("/notifications/read-all");
+
 export const updateProfile = (profileData) =>
   api.put("/auth/profile", profileData);
 

@@ -12,9 +12,11 @@ import {
   Github,
   Linkedin,
   Settings,
+  Bell,
 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
+import { getUnreadNotificationCount } from "../../lib/api";
 import LoginModal from "../auth/LoginModal";
 import SignupModal from "../auth/SignupModal";
 import Home from "../../pages/Home";
@@ -23,12 +25,37 @@ import ClaimerDashboardPage from "../../pages/ClaimerDashboard";
 import PosterDashboard from "../../pages/PosterDashboard";
 import DonorProfile from "../../pages/DonorProfile";
 import AccountSettings from "../../pages/AccountSettings";
+import Notifications from "../../pages/Notifications";
 import PostFoodForm from "../post/PostFoodForm";
 import ProtectedRoute from "../auth/ProtectedRoute";
 import AllListings from "../../pages/Listings";
 
 function NavAuth({ onOpenLogin, onOpenSignup, isMobile = false }) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setUnreadCount(0);
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    async function loadUnreadCount() {
+      try {
+        const { data } = await getUnreadNotificationCount();
+        if (!cancelled) setUnreadCount(data.unreadCount || 0);
+      } catch (err) {
+        console.warn("Could not load unread notifications", err);
+      }
+    }
+
+    loadUnreadCount();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
 
   if (isLoading) {
     return <div className="h-8 w-32 animate-pulse bg-gray-200 rounded" />;
@@ -69,6 +96,19 @@ function NavAuth({ onOpenLogin, onOpenSignup, isMobile = false }) {
         >
           <Settings size={16} />
           {isMobile && <span>Settings</span>}
+        </Link>
+        <Link
+          to="/notifications"
+          title="Notifications"
+          className={`relative flex items-center gap-2 text-mid-gray hover:text-primary transition ${isMobile ? "w-full px-4 py-2 bg-gray-50 rounded-xl text-sm font-medium" : "p-1"}`}
+        >
+          <Bell size={17} />
+          {unreadCount > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-urgency px-1 text-[10px] font-bold leading-none text-white">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+          {isMobile && <span>Notifications</span>}
         </Link>
         <button
           onClick={logout}
@@ -179,11 +219,14 @@ function AppShell() {
     location.pathname.startsWith("/donor") ||
     location.pathname.startsWith("/claimer") ||
     location.pathname.startsWith("/post") ||
-    location.pathname.startsWith("/settings");
+    location.pathname.startsWith("/settings") ||
+    location.pathname.startsWith("/notifications");
+  const isNotificationsPage = location.pathname.startsWith("/notifications");
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-dark">
       {/* Navigation Bar */}
+      {!isNotificationsPage && (
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
@@ -253,6 +296,7 @@ function AppShell() {
           </div>
         )}
       </header>
+      )}
 
       {/* Main Content */}
       <main>
@@ -310,6 +354,14 @@ function AppShell() {
             element={
               <ProtectedRoute>
                 <AccountSettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <Notifications />
               </ProtectedRoute>
             }
           />

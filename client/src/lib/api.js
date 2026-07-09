@@ -83,8 +83,8 @@ api.interceptors.response.use(
 
 export const getListings = (params = {}) => {
   // Backward-compat: allow getListings("Lagos") as well as getListings({ city, status, page, limit })
-  const query = typeof params === 'string' ? { city: params } : params;
-  return api.get('/listings', { params: query });
+  const query = typeof params === "string" ? { city: params } : params;
+  return api.get("/listings", { params: query });
 };
 
 export const getMyListings = () => api.get("/listings/mine");
@@ -122,7 +122,7 @@ export const getMyClaims = () => {
 };
 
 export const getClaimById = (claimId) => {
-  return api.get(`/claims/${claimId}`);
+  return api.get(`/claims/${claimId}/claimer`);
 };
 
 
@@ -162,8 +162,7 @@ export const forgotPassword = (email) =>
 export const resetPassword = ({ token, password }) =>
   api.post("/auth/reset-password", { token, password });
 
-export const getDonorProfile = (donorId) =>
-  api.get(`/donors/${donorId}`);
+export const getDonorProfile = (donorId) => api.get(`/donors/${donorId}`);
 
 export const getDonorListings = (donorId) =>
   api.get(`/donors/${donorId}/listings`);
@@ -171,7 +170,15 @@ export const getDonorListings = (donorId) =>
 export const getDonorRatings = (donorId) =>
   api.get(`/donors/${donorId}/ratings`);
 
-export const getDonorStats = (donorId) =>
-  api.get(`/donors/${donorId}/stats`);
+export const getDonorStats = (donorId) => api.get(`/donors/${donorId}/stats`);
+
+export const getClaimDetails = (claimId) => api.get(`/claims/${claimId}`);
+
+export const confirmClaim = (claimId) => api.put(`/claims/${claimId}/confirm`);
+
+export const declineClaim = (claimId) => api.put(`/claims/${claimId}/decline`);
+
+export const sendClaimPickupDetails = (claimId, data) =>
+  api.put(`/claims/${claimId}/details`, data);
 
 export default api;

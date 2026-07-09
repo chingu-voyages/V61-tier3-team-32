@@ -29,6 +29,7 @@ import Notifications from "../../pages/Notifications";
 import PostFoodForm from "../post/PostFoodForm";
 import ProtectedRoute from "../auth/ProtectedRoute";
 import AllListings from "../../pages/Listings";
+import ClaimDetails from "../../pages/ClaimDetails";
 import ClaimerClaimDetail from "../../pages/ClaimerClaimDetail";
 
 function NavAuth({ onOpenLogin, onOpenSignup, isMobile = false }) {
@@ -198,13 +199,41 @@ function AppShell() {
   };
 
   const teamMembers = [
-    { name: "Ruthigwe Oruta", github: "https://github.com/Xondacc", linkedin: "https://linkedin.com/in/ruthigwe-oruta" },
-    { name: "Daniele Kafriyie", github: "https://github.com/dk-afriyie", linkedin: "https://linkedin.com/in/danielkafriyie/" },
-    { name: "David Akanang", github: "https://github.com/DavidBugger", linkedin: "https://linkedin.com/in/david-akanang-0789771a4" },
-    { name: "Bathshua", github: "https://github.com/bathshuabradley", linkedin: "https://linkedin.com/in/Awsomgal/" },
-    { name: "Alwin Puche", github: "https://github.com/awyyyn", linkedin: "https://linkedin.com/in/alwin-puche-7295851b7/" },
-    { name: "Anderson Osayerie", github: "https://github.com/andersonosayerie", linkedin: "https://linkedin.com/in/anderson-osayerie" },
-    { name: "Jonathan", github: "https://github.com/jnini2076e", linkedin: "https://www.linkedin.com/in/jonathan-padilla7/" },
+    {
+      name: "Ruthigwe Oruta",
+      github: "https://github.com/Xondacc",
+      linkedin: "https://linkedin.com/in/ruthigwe-oruta",
+    },
+    {
+      name: "Daniele Kafriyie",
+      github: "https://github.com/dk-afriyie",
+      linkedin: "https://linkedin.com/in/danielkafriyie/",
+    },
+    {
+      name: "David Akanang",
+      github: "https://github.com/DavidBugger",
+      linkedin: "https://linkedin.com/in/david-akanang-0789771a4",
+    },
+    {
+      name: "Bathshua",
+      github: "https://github.com/bathshuabradley",
+      linkedin: "https://linkedin.com/in/Awsomgal/",
+    },
+    {
+      name: "Alwin Puche",
+      github: "https://github.com/awyyyn",
+      linkedin: "https://linkedin.com/in/alwin-puche-7295851b7/",
+    },
+    {
+      name: "Anderson Osayerie",
+      github: "https://github.com/andersonosayerie",
+      linkedin: "https://linkedin.com/in/anderson-osayerie",
+    },
+    {
+      name: "Jonathan",
+      github: "https://github.com/jnini2076e",
+      linkedin: "https://www.linkedin.com/in/jonathan-padilla7/",
+    },
   ];
 
   const navLinks = [
@@ -337,6 +366,14 @@ function AppShell() {
             }
           />
           <Route
+            path="/donor/claims/:claimId"
+            element={
+              <ProtectedRoute requiredRole="donor">
+                <ClaimDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/claimer"
             element={
               <ProtectedRoute requiredRole="claimer">
@@ -401,32 +438,48 @@ function AppShell() {
       <footer className="bg-white py-12 border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row justify-between items-start gap-10 mb-12">
-
             {/* Left Column */}
             <div className="max-w-xs">
               <div className="flex items-center gap-2 mb-4">
                 <div className="bg-primary p-1.5 rounded-full text-white">
                   <UtensilsCrossed size={20} />
                 </div>
-                <span className="text-xl font-bold tracking-tight text-dark">FoodRescue</span>
+                <span className="text-xl font-bold tracking-tight text-dark">
+                  FoodRescue
+                </span>
               </div>
               <p className="text-mid-gray text-sm leading-relaxed">
-                Don't waste it. Share it. Built with care for communities across Nigeria.
+                Don't waste it. Share it. Built with care for communities across
+                Nigeria.
               </p>
             </div>
 
             {/* Right Column: Built By Grid */}
             <div>
-              <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-4">BUILT BY</h4>
+              <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-4">
+                BUILT BY
+              </h4>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-x-12 gap-y-4">
                 {teamMembers.map((member) => (
                   <div key={member.name} className="flex items-center gap-2">
                     <span className="text-sm text-dark">{member.name}</span>
                     <div className="flex items-center gap-1.5 opacity-40 hover:opacity-100 transition">
-                      <a href={member.github} target="_blank" rel="noreferrer" className="hover:text-primary transition" title={`${member.name} GitHub`}>
+                      <a
+                        href={member.github}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="hover:text-primary transition"
+                        title={`${member.name} GitHub`}
+                      >
                         <Github size={12} />
                       </a>
-                      <a href={member.linkedin} target="_blank" rel="noreferrer" className="hover:text-[#0077b5] transition" title={`${member.name} LinkedIn`}>
+                      <a
+                        href={member.linkedin}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="hover:text-[#0077b5] transition"
+                        title={`${member.name} LinkedIn`}
+                      >
                         <Linkedin size={12} />
                       </a>
                     </div>
@@ -456,10 +509,11 @@ function AppShell() {
       {/* Back to Top Button */}
       <button
         onClick={scrollToTop}
-        className={`fixed bottom-8 right-8 bg-primary text-white p-3 rounded-full shadow-lg hover:bg-opacity-90 transition-all z-50 ${showScrollTop
-          ? "opacity-100 translate-y-0"
-          : "opacity-0 translate-y-4 pointer-events-none"
-          }`}
+        className={`fixed bottom-8 right-8 bg-primary text-white p-3 rounded-full shadow-lg hover:bg-opacity-90 transition-all z-50 ${
+          showScrollTop
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 translate-y-4 pointer-events-none"
+        }`}
         aria-label="Back to top"
       >
         <ChevronUp size={24} />

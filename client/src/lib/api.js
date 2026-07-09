@@ -83,8 +83,8 @@ api.interceptors.response.use(
 
 export const getListings = (params = {}) => {
   // Backward-compat: allow getListings("Lagos") as well as getListings({ city, status, page, limit })
-  const query = typeof params === 'string' ? { city: params } : params;
-  return api.get('/listings', { params: query });
+  const query = typeof params === "string" ? { city: params } : params;
+  return api.get("/listings", { params: query });
 };
 
 export const getMyListings = () => api.get("/listings/mine");
@@ -121,6 +121,18 @@ export const getMyClaims = () => {
   return api.get("/claims/mine");
 };
 
+export const getNotifications = (params = {}) =>
+  api.get("/notifications", { params });
+
+export const getUnreadNotificationCount = () =>
+  api.get("/notifications/unread-count");
+
+export const markNotificationRead = (notificationId) =>
+  api.patch(`/notifications/${notificationId}/read`);
+
+export const markAllNotificationsRead = () =>
+  api.patch("/notifications/read-all");
+
 export const updateProfile = (profileData) =>
   api.put("/auth/profile", profileData);
 
@@ -145,8 +157,7 @@ export const forgotPassword = (email) =>
 export const resetPassword = ({ token, password }) =>
   api.post("/auth/reset-password", { token, password });
 
-export const getDonorProfile = (donorId) =>
-  api.get(`/donors/${donorId}`);
+export const getDonorProfile = (donorId) => api.get(`/donors/${donorId}`);
 
 export const getDonorListings = (donorId) =>
   api.get(`/donors/${donorId}/listings`);
@@ -154,7 +165,15 @@ export const getDonorListings = (donorId) =>
 export const getDonorRatings = (donorId) =>
   api.get(`/donors/${donorId}/ratings`);
 
-export const getDonorStats = (donorId) =>
-  api.get(`/donors/${donorId}/stats`);
+export const getDonorStats = (donorId) => api.get(`/donors/${donorId}/stats`);
+
+export const getClaimDetails = (claimId) => api.get(`/claims/${claimId}`);
+
+export const confirmClaim = (claimId) => api.put(`/claims/${claimId}/confirm`);
+
+export const declineClaim = (claimId) => api.put(`/claims/${claimId}/decline`);
+
+export const sendClaimPickupDetails = (claimId, data) =>
+  api.put(`/claims/${claimId}/details`, data);
 
 export default api;

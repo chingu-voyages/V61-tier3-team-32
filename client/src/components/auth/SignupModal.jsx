@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   X,
   UserPlus,
@@ -28,6 +29,7 @@ export default function SignupModal({
   initialRole = "claimer",
 }) {
   const { register } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ ...initialFormState, role: initialRole });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,7 +71,8 @@ export default function SignupModal({
 
     setIsSubmitting(true);
     try {
-      await register(form);
+      const newUser = await register(form);
+      navigate(newUser?.role === "donor" ? "/donor" : "/claimer");
       onSuccess?.();
     } catch (err) {
       const message =

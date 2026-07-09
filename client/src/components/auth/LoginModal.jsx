@@ -47,8 +47,8 @@ export default function LoginModal({ onClose, onSwitchToSignup, onSuccess }) {
 
     setIsSubmitting(true);
     try {
-      const data = await login({ email, password });
-      navigate(data.user?.role === "donor" ? "/donor" : "/claimer");
+      const loggedInUser = await login({ email, password });
+      navigate(loggedInUser?.role === "donor" ? "/donor" : "/claimer");
       onSuccess?.();
     } catch (err) {
       const message =

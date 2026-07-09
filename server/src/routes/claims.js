@@ -1,15 +1,16 @@
 const express = require("express");
 const {
-  verifyToken,
-  isClaimer,
-  isDonor,
+    verifyToken,
+    isClaimer,
+    isDonor,
 } = require("../middleware/auth.middleware");
 const {
-  getMyClaims,
-  getClaimDetails,
-  confirmClaim,
-  declineClaim,
-  sendPickupDetails,
+    getMyClaims,
+    getClaimDetails,
+    getClaimById,
+    confirmClaim,
+    declineClaim,
+    sendPickupDetails,
 } = require("../controllers/claims.controller");
 
 const router = express.Router();
@@ -27,6 +28,30 @@ const router = express.Router();
  *         description: List of claims made by the user
  */
 router.get("/mine", verifyToken, isClaimer, getMyClaims);
+
+/**
+ * @swagger
+ * /api/claims/{id}/claimer:
+ *   get:
+ *     summary: Get a single claim by ID (claimer only — includes full donor info)
+ *     tags: [Claims]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Claim detail with listing and donor info
+ *       403:
+ *         description: Not authorized
+ *       404:
+ *         description: Claim not found
+ */
+router.get("/:id/claimer", verifyToken, isClaimer, getClaimById);
 
 /**
  * @swagger

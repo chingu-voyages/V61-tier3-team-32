@@ -63,7 +63,7 @@ const createClaim = async (req, res) => {
             title: "Pickup Reminder",
             message: `Reminder: Pick up your ${listing.title} from ${listing.address || listing.city || "the donor"} before the pickup window closes.`,
             actionLabel: "View Claim",
-            actionUrl: "/claimer",
+            actionUrl: `/claimer/claims/${createdClaim.id}`,
             relatedClaimId: createdClaim.id,
             relatedListingId: listing.id,
             metadata: {
@@ -136,4 +136,40 @@ const getListingClaims = async (req, res) => {
   }
 };
 
-module.exports = { createClaim, getMyClaims, getListingClaims };
+const getClaimById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const claim = await prisma.claim.findUnique({
+      where: { id },
+      include: {
+        listing: {
+          include: {
+            donor: {
+              select: {
+                id: true,
+                name: true,
+                businessName: true,
+                email: true,
+                city: true,
+                phoneNumber: true,
+                photoUrl: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!claim) return res.status(404).json({ message: "Claim not found" });
+    if (claim.claimerId !== req.user.id)
+      return res.status(403).json({ message: "Not authorized to view this claim" });
+
+    res.json(claim);
+  } catch (error) {
+    console.error("Get Claim By ID Error:", error);
+    res.status(500).json({ message: "Server error fetching claim" });
+  }
+};
+
+module.exports = { createClaim, getMyClaims, getListingClaims, getClaimById };
+

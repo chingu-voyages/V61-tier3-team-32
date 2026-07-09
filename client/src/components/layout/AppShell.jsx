@@ -29,6 +29,7 @@ import Notifications from "../../pages/Notifications";
 import PostFoodForm from "../post/PostFoodForm";
 import ProtectedRoute from "../auth/ProtectedRoute";
 import AllListings from "../../pages/Listings";
+import ClaimerClaimDetail from "../../pages/ClaimerClaimDetail";
 
 function NavAuth({ onOpenLogin, onOpenSignup, isMobile = false }) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
@@ -221,81 +222,83 @@ function AppShell() {
     location.pathname.startsWith("/post") ||
     location.pathname.startsWith("/settings") ||
     location.pathname.startsWith("/notifications");
-  const isNotificationsPage = location.pathname.startsWith("/notifications");
+  const isNotificationsPage =
+    location.pathname.startsWith("/notifications") ||
+    location.pathname.startsWith("/claimer/claims/");
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-dark">
       {/* Navigation Bar */}
       {!isNotificationsPage && (
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 transition-all">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 group">
-              <div className="bg-primary p-1.5 rounded-full text-white group-hover:bg-opacity-90 transition">
-                <UtensilsCrossed size={24} />
-              </div>
-              <span className="text-xl font-bold tracking-tight text-primary hidden sm:block">
-                FoodRescue
-              </span>
-            </Link>
+        <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 transition-all">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-20">
+              {/* Logo */}
+              <Link to="/" className="flex items-center gap-2 group">
+                <div className="bg-primary p-1.5 rounded-full text-white group-hover:bg-opacity-90 transition">
+                  <UtensilsCrossed size={24} />
+                </div>
+                <span className="text-xl font-bold tracking-tight text-primary hidden sm:block">
+                  FoodRescue
+                </span>
+              </Link>
 
-            {/* Desktop Center Links */}
-            {!hideCenterNav && (
-              <nav className="hidden lg:flex items-center gap-8">
-                {navLinks.map((link) => (
-                  <a
-                    key={link.name}
-                    href={link.href}
-                    className="text-sm font-medium text-mid-gray hover:text-dark transition"
-                  >
-                    {link.name}
-                  </a>
-                ))}
-              </nav>
-            )}
+              {/* Desktop Center Links */}
+              {!hideCenterNav && (
+                <nav className="hidden lg:flex items-center gap-8">
+                  {navLinks.map((link) => (
+                    <a
+                      key={link.name}
+                      href={link.href}
+                      className="text-sm font-medium text-mid-gray hover:text-dark transition"
+                    >
+                      {link.name}
+                    </a>
+                  ))}
+                </nav>
+              )}
 
-            {/* Desktop Auth Actions & Mobile Hamburger */}
-            <div className="flex items-center gap-4">
-              <div className="hidden lg:flex items-center">
-                <NavAuth onOpenLogin={openLogin} onOpenSignup={openSignup} />
-              </div>
-              <button
-                className="lg:hidden p-2 text-dark"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              >
-                {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden bg-white border-b border-gray-100 absolute top-20 left-0 w-full shadow-lg">
-            <div className="px-4 pt-2 pb-6 space-y-1">
-              {!hideCenterNav &&
-                navLinks.map((link) => (
-                  <a
-                    key={link.name}
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block px-3 py-3 text-base font-medium text-dark border-b border-gray-50"
-                  >
-                    {link.name}
-                  </a>
-                ))}
-              <div className="pt-6 px-3">
-                <NavAuth
-                  onOpenLogin={openLogin}
-                  onOpenSignup={openSignup}
-                  isMobile={true}
-                />
+              {/* Desktop Auth Actions & Mobile Hamburger */}
+              <div className="flex items-center gap-4">
+                <div className="hidden lg:flex items-center">
+                  <NavAuth onOpenLogin={openLogin} onOpenSignup={openSignup} />
+                </div>
+                <button
+                  className="lg:hidden p-2 text-dark"
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                >
+                  {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                </button>
               </div>
             </div>
           </div>
-        )}
-      </header>
+
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="lg:hidden bg-white border-b border-gray-100 absolute top-20 left-0 w-full shadow-lg">
+              <div className="px-4 pt-2 pb-6 space-y-1">
+                {!hideCenterNav &&
+                  navLinks.map((link) => (
+                    <a
+                      key={link.name}
+                      href={link.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block px-3 py-3 text-base font-medium text-dark border-b border-gray-50"
+                    >
+                      {link.name}
+                    </a>
+                  ))}
+                <div className="pt-6 px-3">
+                  <NavAuth
+                    onOpenLogin={openLogin}
+                    onOpenSignup={openSignup}
+                    isMobile={true}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </header>
       )}
 
       {/* Main Content */}
@@ -338,6 +341,14 @@ function AppShell() {
             element={
               <ProtectedRoute requiredRole="claimer">
                 <ClaimerDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/claimer/claims/:id"
+            element={
+              <ProtectedRoute requiredRole="claimer">
+                <ClaimerClaimDetail />
               </ProtectedRoute>
             }
           />

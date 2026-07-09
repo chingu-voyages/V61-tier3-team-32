@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { X, LogIn, Eye, EyeOff, ArrowLeft, Mail, CheckCircle2 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
@@ -6,6 +7,7 @@ import { forgotPassword } from "../../lib/api";
 
 export default function LoginModal({ onClose, onSwitchToSignup, onSuccess }) {
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   // views: "login" | "forgot" | "forgot-sent"
   const [view, setView] = useState("login");
@@ -37,7 +39,8 @@ export default function LoginModal({ onClose, onSwitchToSignup, onSuccess }) {
 
     setIsSubmitting(true);
     try {
-      await login({ email, password });
+      const loggedInUser = await login({ email, password });
+      navigate(loggedInUser?.role === "donor" ? "/donor" : "/claimer");
       onSuccess?.();
     } catch (err) {
       const message =

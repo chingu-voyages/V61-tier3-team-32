@@ -1,11 +1,21 @@
 import { useState } from "react";
-import { X, LogIn, Eye, EyeOff, ArrowLeft, Mail, CheckCircle2 } from "lucide-react";
+import {
+  X,
+  LogIn,
+  Eye,
+  EyeOff,
+  ArrowLeft,
+  Mail,
+  CheckCircle2,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../context/AuthContext";
 import { forgotPassword } from "../../lib/api";
 
 export default function LoginModal({ onClose, onSwitchToSignup, onSuccess }) {
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   // views: "login" | "forgot" | "forgot-sent"
   const [view, setView] = useState("login");
@@ -37,7 +47,8 @@ export default function LoginModal({ onClose, onSwitchToSignup, onSuccess }) {
 
     setIsSubmitting(true);
     try {
-      await login({ email, password });
+      const data = await login({ email, password });
+      navigate(data.user?.role === "donor" ? "/donor" : "/claimer");
       onSuccess?.();
     } catch (err) {
       const message =
@@ -86,9 +97,16 @@ export default function LoginModal({ onClose, onSwitchToSignup, onSuccess }) {
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 <LogIn className="h-5 w-5 text-primary" />
-                <h2 className="text-xl font-bold text-dark">Log in to FoodRescue</h2>
+                <h2 className="text-xl font-bold text-dark">
+                  Log in to FoodRescue
+                </h2>
               </div>
-              <button type="button" onClick={onClose} aria-label="Close" className="text-mid-gray hover:text-dark transition">
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close"
+                className="text-mid-gray hover:text-dark transition"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -99,7 +117,10 @@ export default function LoginModal({ onClose, onSwitchToSignup, onSuccess }) {
 
             <form onSubmit={handleLogin} className="mt-5 space-y-4">
               <div>
-                <label htmlFor="login-email" className="block text-sm font-medium text-dark mb-1">
+                <label
+                  htmlFor="login-email"
+                  className="block text-sm font-medium text-dark mb-1"
+                >
                   Email *
                 </label>
                 <input
@@ -114,12 +135,18 @@ export default function LoginModal({ onClose, onSwitchToSignup, onSuccess }) {
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="login-password" className="block text-sm font-medium text-dark">
+                  <label
+                    htmlFor="login-password"
+                    className="block text-sm font-medium text-dark"
+                  >
                     Password *
                   </label>
                   <button
                     type="button"
-                    onClick={() => { setView("forgot"); setForgotEmail(email); }}
+                    onClick={() => {
+                      setView("forgot");
+                      setForgotEmail(email);
+                    }}
                     className="text-xs text-primary hover:underline font-medium"
                   >
                     Forgot password?
@@ -138,14 +165,24 @@ export default function LoginModal({ onClose, onSwitchToSignup, onSuccess }) {
                     type="button"
                     className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-dark transition"
                     onClick={() => setShowPassword(!showPassword)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
               </div>
 
-              {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
+              {error && (
+                <p role="alert" className="text-sm text-red-500">
+                  {error}
+                </p>
+              )}
 
               <button
                 type="submit"
@@ -158,7 +195,11 @@ export default function LoginModal({ onClose, onSwitchToSignup, onSuccess }) {
 
               <p className="text-center text-sm text-mid-gray">
                 New here?{" "}
-                <button type="button" onClick={onSwitchToSignup} className="text-primary font-medium hover:underline">
+                <button
+                  type="button"
+                  onClick={onSwitchToSignup}
+                  className="text-primary font-medium hover:underline"
+                >
                   Create an account
                 </button>
               </p>
@@ -177,7 +218,12 @@ export default function LoginModal({ onClose, onSwitchToSignup, onSuccess }) {
               >
                 <ArrowLeft className="h-4 w-4" /> Back
               </button>
-              <button type="button" onClick={onClose} aria-label="Close" className="text-mid-gray hover:text-dark transition">
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close"
+                className="text-mid-gray hover:text-dark transition"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -186,15 +232,21 @@ export default function LoginModal({ onClose, onSwitchToSignup, onSuccess }) {
               <div className="w-12 h-12 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4">
                 <Mail className="h-6 w-6 text-primary" />
               </div>
-              <h2 className="text-xl font-bold text-dark mb-2">Reset your password</h2>
+              <h2 className="text-xl font-bold text-dark mb-2">
+                Reset your password
+              </h2>
               <p className="text-sm text-mid-gray">
-                Enter your email and we'll send you a link to reset your password.
+                Enter your email and we'll send you a link to reset your
+                password.
               </p>
             </div>
 
             <form onSubmit={handleForgotPassword} className="space-y-4">
               <div>
-                <label htmlFor="forgot-email" className="block text-sm font-medium text-dark mb-1">
+                <label
+                  htmlFor="forgot-email"
+                  className="block text-sm font-medium text-dark mb-1"
+                >
                   Email address *
                 </label>
                 <input
@@ -207,7 +259,11 @@ export default function LoginModal({ onClose, onSwitchToSignup, onSuccess }) {
                 />
               </div>
 
-              {forgotError && <p role="alert" className="text-sm text-red-500">{forgotError}</p>}
+              {forgotError && (
+                <p role="alert" className="text-sm text-red-500">
+                  {forgotError}
+                </p>
+              )}
 
               <button
                 type="submit"
@@ -224,15 +280,24 @@ export default function LoginModal({ onClose, onSwitchToSignup, onSuccess }) {
         {/* ── FORGOT SENT VIEW ── */}
         {view === "forgot-sent" && (
           <div className="text-center py-4">
-            <button type="button" onClick={onClose} aria-label="Close" className="absolute top-5 right-5 text-mid-gray hover:text-dark transition">
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="absolute top-5 right-5 text-mid-gray hover:text-dark transition"
+            >
               <X className="h-5 w-5" />
             </button>
             <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 className="h-7 w-7 text-green-500" />
             </div>
-            <h2 className="text-xl font-bold text-dark mb-2">Check your inbox</h2>
+            <h2 className="text-xl font-bold text-dark mb-2">
+              Check your inbox
+            </h2>
             <p className="text-sm text-mid-gray mb-6">
-              If an account exists for <span className="font-medium text-dark">{forgotEmail}</span>, we've sent a password reset link. It may take a minute to arrive.
+              If an account exists for{" "}
+              <span className="font-medium text-dark">{forgotEmail}</span>,
+              we've sent a password reset link. It may take a minute to arrive.
             </p>
             <button
               type="button"

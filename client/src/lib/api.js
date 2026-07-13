@@ -121,6 +121,11 @@ export const getMyClaims = () => {
   return api.get("/claims/mine");
 };
 
+export const getClaimById = (claimId) => {
+  return api.get(`/claims/${claimId}/claimer`);
+};
+
+
 export const getNotifications = (params = {}) =>
   api.get("/notifications", { params });
 

@@ -30,6 +30,7 @@ import PostFoodForm from "../post/PostFoodForm";
 import ProtectedRoute from "../auth/ProtectedRoute";
 import AllListings from "../../pages/Listings";
 import ClaimDetails from "../../pages/ClaimDetails";
+import ClaimerClaimDetail from "../../pages/ClaimerClaimDetail";
 
 function NavAuth({ onOpenLogin, onOpenSignup, isMobile = false }) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
@@ -250,7 +251,9 @@ function AppShell() {
     location.pathname.startsWith("/post") ||
     location.pathname.startsWith("/settings") ||
     location.pathname.startsWith("/notifications");
-  const isNotificationsPage = location.pathname.startsWith("/notifications");
+  const isNotificationsPage =
+    location.pathname.startsWith("/notifications") ||
+    location.pathname.startsWith("/claimer/claims/");
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-dark">
@@ -375,6 +378,14 @@ function AppShell() {
             element={
               <ProtectedRoute requiredRole="claimer">
                 <ClaimerDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/claimer/claims/:id"
+            element={
+              <ProtectedRoute requiredRole="claimer">
+                <ClaimerClaimDetail />
               </ProtectedRoute>
             }
           />

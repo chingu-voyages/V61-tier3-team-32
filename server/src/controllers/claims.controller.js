@@ -65,7 +65,7 @@ const createClaim = async (req, res) => {
             title: "Pickup Reminder",
             message: `Reminder: Pick up your ${listing.title} from ${listing.address || listing.city || "the donor"} before the pickup window closes.`,
             actionLabel: "View Claim",
-            actionUrl: "/claimer",
+            actionUrl: `/claimer/claims/${createdClaim.id}`,
             relatedClaimId: createdClaim.id,
             relatedListingId: listing.id,
             metadata: {
@@ -138,6 +138,7 @@ const getListingClaims = async (req, res) => {
   }
 };
 
+// For donors — view a claim on their own listing
 const getClaimDetails = async (req, res) => {
   const { id } = req.params;
   try {
@@ -156,6 +157,7 @@ const getClaimDetails = async (req, res) => {
         },
       },
     });
+
     if (!claim) return res.status(404).json({ message: "Claim not found" });
     if (claim.listing.donorId !== req.user.id) {
       return res
@@ -166,6 +168,42 @@ const getClaimDetails = async (req, res) => {
   } catch (error) {
     console.error("Get Claim Details Error:", error);
     res.status(500).json({ message: "Server error fetching claim details" });
+  }
+};
+
+// For claimers — view their own claim with full listing + donor info
+const getClaimById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const claim = await prisma.claim.findUnique({
+      where: { id },
+      include: {
+        listing: {
+          include: {
+            donor: {
+              select: {
+                id: true,
+                name: true,
+                businessName: true,
+                email: true,
+                city: true,
+                phoneNumber: true,
+                photoUrl: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!claim) return res.status(404).json({ message: "Claim not found" });
+    if (claim.claimerId !== req.user.id)
+      return res.status(403).json({ message: "Not authorized to view this claim" });
+
+    res.json(claim);
+  } catch (error) {
+    console.error("Get Claim By ID Error:", error);
+    res.status(500).json({ message: "Server error fetching claim" });
   }
 };
 
@@ -318,9 +356,6 @@ const sendPickupDetails = async (req, res) => {
           detailsSentAt: new Date(),
         },
       }),
-      // "The claimer should get a
-      // notification once the donor inputs the address, email and phone
-      // number to be contacted for claim and clicks send."
       prisma.notification.create({
         data: {
           userId: claim.claimerId,
@@ -353,6 +388,7 @@ module.exports = {
   getMyClaims,
   getListingClaims,
   getClaimDetails,
+  getClaimById,
   confirmClaim,
   declineClaim,
   sendPickupDetails,

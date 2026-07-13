@@ -59,7 +59,7 @@ export default function ClaimerClaimDetail() {
     <div className="min-h-screen bg-[#F9FAFB] text-dark flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-4 sm:px-6 h-16">
-        <button 
+        <button
           onClick={() => navigate("/notifications")}
           className="flex items-center gap-2 text-sm font-medium text-mid-gray hover:text-dark transition"
         >
@@ -76,7 +76,7 @@ export default function ClaimerClaimDetail() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center pt-16 px-4">
-        
+
         {/* Status Icon */}
         <div className="mb-6">
           {isConfirmed ? (
@@ -96,7 +96,7 @@ export default function ClaimerClaimDetail() {
             {isConfirmed ? "Claim Confirmed & Ready for Pickup" : "Claim Pending"}
           </h1>
           <p className="text-gray-500 text-sm">
-            {isConfirmed 
+            {isConfirmed
               ? "The donor has approved your claim. Please find the collection details below."
               : "Waiting for the donor to approve your claim. We will notify you once confirmed."}
           </p>
@@ -105,7 +105,7 @@ export default function ClaimerClaimDetail() {
         {/* Details Card */}
         {isConfirmed && (
           <div className="w-full max-w-2xl bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4 mb-8">
-            
+
             {/* Pickup Address */}
             <div className="border border-gray-100 rounded-xl p-4 bg-[#F9FAFB]/50">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
@@ -145,11 +145,11 @@ export default function ClaimerClaimDetail() {
             </div>
           </div>
         )}
-        
+
         {/* Support Link */}
-        <div className="text-center text-sm text-gray-500 mb-12">
+        {/* <div className="text-center text-sm text-gray-500 mb-12">
           Having trouble with this pickup? <button className="font-semibold text-dark hover:underline">Contact FoodRescue Support</button>
-        </div>
+        </div> */}
       </main>
 
       {/* Footer */}
@@ -159,7 +159,7 @@ export default function ClaimerClaimDetail() {
             FoodRescue
           </div>
           <p className="text-xs text-gray-400">
-            © 2024 FoodRescue Community. All rights reserved.
+            © 2026 FoodRescue Community. All rights reserved.
           </p>
           <div className="flex gap-4 text-xs font-medium text-gray-500">
             <button className="hover:text-dark">Privacy Policy</button>

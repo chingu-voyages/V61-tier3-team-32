@@ -25,6 +25,7 @@ import ListingCard from "./ListingCard";
 
 import { getListings, claimListing, getMyClaims } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
+import { NIGERIAN_CITIES } from "../../constants/locations";
 
 const STATUS_DISPLAY = {
   pending: {
@@ -103,6 +104,8 @@ export default function ClaimerDashboard() {
   const [justClaimed, setJustClaimed] = useState(false);
   const [claimedListingId, setClaimedListingId] = useState(null);
   const [viewingClaim, setViewingClaim] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [cityFilter, setCityFilter] = useState("all");
 
   useEffect(() => {
     let cancelled = false;
@@ -116,8 +119,13 @@ export default function ClaimerDashboard() {
         const coords = await resolveCoords(user);
 
         // Fetch listings and claims in parallel
+        const listingsQuery = { status: "active", limit: 6 };
+        if (cityFilter !== "all") {
+          listingsQuery.city = cityFilter;
+        }
+
         const [listingsRes, claimsRes] = await Promise.all([
-          getListings({ status: "active", limit: 6 }),
+          getListings(listingsQuery),
           getMyClaims().catch(() => ({ data: [] })), // Don't fail if no claims yet
         ]);
 
@@ -160,7 +168,7 @@ export default function ClaimerDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, cityFilter]);
 
   // Handle claiming a listing
   const handleConfirmClaim = async (listing) => {
@@ -214,6 +222,10 @@ export default function ClaimerDashboard() {
 
   const firstName = user?.name?.split(" ")[0] ?? "User";
 
+  const filteredClaims = claims.filter(
+    (claim) => statusFilter === "all" || claim.status === statusFilter
+  );
+
   return (
     <div className="max-w-7xl mx-auto space-y-10 px-4 sm:px-6 lg:px-8 py-8">
       <div>
@@ -256,12 +268,18 @@ export default function ClaimerDashboard() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-dark">Live Feed Near You</h3>
-          <Link
-            to="/listings"
-            className="text-sm font-medium text-primary hover:underline hidden"
+          <select
+            value={cityFilter}
+            onChange={(e) => setCityFilter(e.target.value)}
+            className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-dark font-medium"
           >
-            View All
-          </Link>
+            <option value="all">All Locations</option>
+            {NIGERIAN_CITIES.map((state) => (
+              <option key={state} value={state}>
+                {state}
+              </option>
+            ))}
+          </select>
         </div>
 
         {isLoading ? (
@@ -271,7 +289,7 @@ export default function ClaimerDashboard() {
         ) : feedListings.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
             <p className="text-mid-gray">
-              No listings available near you right now.
+              No listings available for the selected location right now.
             </p>
             <p className="text-sm text-mid-gray mt-2">
               Check back later or expand your search area.
@@ -304,7 +322,19 @@ export default function ClaimerDashboard() {
       </div>
 
       <div>
-        <h3 className="text-lg font-bold text-dark mb-3">Recent Claims</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-bold text-dark">Recent Claims</h3>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-dark font-medium"
+          >
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="no_show">No Show</option>
+          </select>
+        </div>
         <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
           {isLoading ? (
             <div className="flex justify-center py-12">
@@ -316,6 +346,10 @@ export default function ClaimerDashboard() {
               <p className="text-sm text-mid-gray mt-2">
                 Browse the live feed above to rescue your first meal!
               </p>
+            </div>
+          ) : filteredClaims.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-mid-gray">No claims found for this state.</p>
             </div>
           ) : (
             <table className="w-full text-sm min-w-[400px]">
@@ -329,7 +363,7 @@ export default function ClaimerDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {claims.slice(0, 5).map((claim) => {
+                {filteredClaims.slice(0, 5).map((claim) => {
                   const status = STATUS_DISPLAY[claim.status] || {
                     label: claim.status,
                     className: "bg-gray-100 text-gray-700",

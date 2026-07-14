@@ -91,14 +91,16 @@ function NavAuth({ onOpenLogin, onOpenSignup, isMobile = false }) {
             Hi, {displayName}
           </span>
         )}
-        <Link
-          to="/settings"
-          title="Account Settings"
-          className={`flex items-center gap-2 text-mid-gray hover:text-primary transition ${isMobile ? "w-full px-4 py-2 bg-gray-50 rounded-xl text-sm font-medium" : ""}`}
-        >
-          <Settings size={16} />
-          {isMobile && <span>Settings</span>}
-        </Link>
+        {user?.role === "donor" && (
+          <Link
+            to="/settings"
+            title="Account Settings"
+            className={`flex items-center gap-2 text-mid-gray hover:text-primary transition ${isMobile ? "w-full px-4 py-2 bg-gray-50 rounded-xl text-sm font-medium" : ""}`}
+          >
+            <Settings size={16} />
+            {isMobile && <span>Settings</span>}
+          </Link>
+        )}
         <Link
           to="/notifications"
           title="Notifications"
@@ -509,11 +511,10 @@ function AppShell() {
       {/* Back to Top Button */}
       <button
         onClick={scrollToTop}
-        className={`fixed bottom-8 right-8 bg-primary text-white p-3 rounded-full shadow-lg hover:bg-opacity-90 transition-all z-50 ${
-          showScrollTop
+        className={`fixed bottom-8 right-8 bg-primary text-white p-3 rounded-full shadow-lg hover:bg-opacity-90 transition-all z-50 ${showScrollTop
             ? "opacity-100 translate-y-0"
             : "opacity-0 translate-y-4 pointer-events-none"
-        }`}
+          }`}
         aria-label="Back to top"
       >
         <ChevronUp size={24} />

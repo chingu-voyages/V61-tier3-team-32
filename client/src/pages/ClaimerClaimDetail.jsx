@@ -160,6 +160,7 @@ export default function ClaimerClaimDetail() {
           </div>
           <p className="text-xs text-gray-400">
             © 2026 FoodRescue Community. All rights reserved.
+
           </p>
           <div className="flex gap-4 text-xs font-medium text-gray-500">
             <button className="hover:text-dark">Privacy Policy</button>

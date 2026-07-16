@@ -4,9 +4,11 @@
   "description": "FoodRescue - Connecting surplus food to people who need it",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run dev --workspace=client\" \"npm run dev --workspace=server\"",
-    "build:client": "npm run build --workspace=client",
-    "install:all": "npm install && npm install --workspace=client && npm install --workspace=server"
+    "dev": "concurrently --names client,server --prefix-colors blue,green \"npm --prefix client run dev -- --host 127.0.0.1\" \"npm --prefix server run dev\"",
+    "dev:client": "npm --prefix client run dev -- --host 127.0.0.1",
+    "dev:server": "npm --prefix server run dev",
+    "build:client": "npm --prefix client run build",
+    "install:all": "npm install && npm --prefix client install && npm --prefix server install"
   },
   "workspaces": [
     "client",

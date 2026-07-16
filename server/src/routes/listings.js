@@ -1,15 +1,22 @@
-const express = require('express');
-const { verifyToken, isDonor, isClaimer } = require('../middleware/auth.middleware');
+const express = require("express");
+const {
+  verifyToken,
+  isDonor,
+  isClaimer,
+} = require("../middleware/auth.middleware");
 const {
   getListings,
   createListing,
   uploadListingPhoto,
   updateListing,
   deleteListing,
-  getMyListings
-} = require('../controllers/listings.controller');
-const { createClaim, getListingClaims } = require('../controllers/claims.controller');
-const { singleImageUpload } = require('../middleware/upload.middleware');
+  getMyListings,
+} = require("../controllers/listings.controller");
+const {
+  createClaim,
+  getListingClaims,
+} = require("../controllers/claims.controller");
+const { singleImageUpload } = require("../middleware/upload.middleware");
 
 const router = express.Router();
 
@@ -17,19 +24,36 @@ const router = express.Router();
  * @swagger
  * /api/listings:
  *   get:
- *     summary: Public feed of active listings
+ *     summary: Public feed of listings with status filter and pagination
  *     tags: [Listings]
  *     parameters:
  *       - in: query
  *         name: city
  *         schema:
  *           type: string
- *         description: Filter listings by city
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: "all | active | claimed | expired | completed (comma-separated for multiple)"
+ *       - in: query
+ *         name: excludeExpired
+ *         schema:
+ *           type: string
+ *         description: "true to drop listings past expiresAt regardless of status"
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
  *     responses:
  *       200:
- *         description: List of active listings
+ *         description: Paginated listings
  */
-router.get('/', getListings);
+router.get("/", getListings);
 
 /**
  * @swagger
@@ -43,7 +67,7 @@ router.get('/', getListings);
  *       200:
  *         description: List of owned listings
  */
-router.get('/mine', verifyToken, isDonor, getMyListings);
+router.get("/mine", verifyToken, isDonor, getMyListings);
 
 /**
  * @swagger
@@ -63,7 +87,7 @@ router.get('/mine', verifyToken, isDonor, getMyListings);
  *       201:
  *         description: Listing created
  */
-router.post('/', verifyToken, isDonor, createListing);
+router.post("/", verifyToken, isDonor, createListing);
 
 /**
  * @swagger
@@ -95,12 +119,18 @@ router.post('/', verifyToken, isDonor, createListing);
  *       200:
  *         description: Listing photo uploaded
  */
-router.post('/:id/photo', verifyToken, isDonor, singleImageUpload('photo'), uploadListingPhoto);
+router.post(
+  "/:id/photo",
+  verifyToken,
+  isDonor,
+  singleImageUpload("photo"),
+  uploadListingPhoto,
+);
 
 /**
  * @swagger
  * /api/listings/{id}:
- *   patch:
+ *   put:
  *     summary: Update an owned listing
  *     tags: [Listings]
  *     security:
@@ -121,7 +151,7 @@ router.post('/:id/photo', verifyToken, isDonor, singleImageUpload('photo'), uplo
  *       200:
  *         description: Listing updated
  */
-router.patch('/:id', verifyToken, isDonor, updateListing);
+router.put('/:id', verifyToken, isDonor, updateListing);
 
 /**
  * @swagger
@@ -141,7 +171,7 @@ router.patch('/:id', verifyToken, isDonor, updateListing);
  *       200:
  *         description: Listing deleted
  */
-router.delete('/:id', verifyToken, isDonor, deleteListing);
+router.delete("/:id", verifyToken, isDonor, deleteListing);
 
 /**
  * @swagger
@@ -161,7 +191,7 @@ router.delete('/:id', verifyToken, isDonor, deleteListing);
  *       201:
  *         description: Listing claimed
  */
-router.post('/:id/claim', verifyToken, isClaimer, createClaim);
+router.post("/:id/claim", verifyToken, isClaimer, createClaim);
 
 /**
  * @swagger
@@ -181,6 +211,6 @@ router.post('/:id/claim', verifyToken, isClaimer, createClaim);
  *       200:
  *         description: List of claims for the listing
  */
-router.get('/:id/claims', verifyToken, isDonor, getListingClaims);
+router.get("/:id/claims", verifyToken, isDonor, getListingClaims);
 
 module.exports = router;

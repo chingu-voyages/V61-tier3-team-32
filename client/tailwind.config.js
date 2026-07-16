@@ -1,10 +1,11 @@
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
+      screens: {
+        xsm: "380px",
+        xs: "480px",
+      },
       colors: {
         primary: "#2D6A4F",
         "primary-light": "#D8F3DC",
@@ -16,9 +17,9 @@ export default {
         "light-gray": "#F3F4F6",
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-      }
+        sans: ["Inter", "sans-serif"],
+      },
     },
   },
   plugins: [],
-}
+};

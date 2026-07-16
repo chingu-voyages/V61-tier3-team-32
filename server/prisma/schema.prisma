@@ -22,7 +22,16 @@ enum ListingStatus {
 enum ClaimStatus {
   pending
   confirmed
+  declined
   no_show
+}
+
+enum NotificationType {
+  new_claim
+  pickup_reminder
+  listing_archived
+  milestone
+  general
 }
 
 model User {
@@ -36,12 +45,20 @@ model User {
   latitude     Float?
   longitude    Float?
   city         String?  @db.VarChar(100)
+  businessName String?  @db.VarChar(150)
+  phoneNumber  String?  @db.VarChar(20)
+  story        String?  @db.Text
+  businessType String?  @db.VarChar(50)
+  photoUrl     String?  @db.Text
   createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
-  listings      Listing[]      @relation("DonorListings")
-  claims        Claim[]        @relation("ClaimerClaims")
-  refreshTokens RefreshToken[]
+  listings            Listing[]            @relation("DonorListings")
+  claims              Claim[]              @relation("ClaimerClaims")
+  refreshTokens       RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+  notifications       Notification[]
 }
 
 model Listing {
@@ -65,16 +82,22 @@ model Listing {
 
   // Relations
   claims Claim[]
+
+  @@index([status, expiresAt])
 }
 
 model Claim {
-  id        String      @id @default(uuid())
-  listingId String
-  listing   Listing     @relation(fields: [listingId], references: [id])
-  claimerId String
-  claimer   User        @relation("ClaimerClaims", fields: [claimerId], references: [id])
-  claimedAt DateTime    @default(now())
-  status    ClaimStatus @default(pending)
+  id            String      @id @default(uuid())
+  listingId     String
+  listing       Listing     @relation(fields: [listingId], references: [id])
+  claimerId     String
+  claimer       User        @relation("ClaimerClaims", fields: [claimerId], references: [id])
+  claimedAt     DateTime    @default(now())
+  status        ClaimStatus @default(pending)
+  pickupAddress String?     @db.Text
+  contactEmail  String?     @db.VarChar(255)
+  contactPhone  String?     @db.VarChar(20)
+  detailsSentAt DateTime?
 
   // Relations
   ratings Rating[]
@@ -88,6 +111,26 @@ model Rating {
   comment String? @db.Text
 }
 
+model Notification {
+  id               String           @id @default(uuid())
+  userId           String
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type             NotificationType @default(general)
+  title            String           @db.VarChar(120)
+  message          String           @db.Text
+  actionLabel      String?          @db.VarChar(80)
+  actionUrl        String?          @db.Text
+  relatedClaimId   String?
+  relatedListingId String?
+  metadata         Json?
+  readAt           DateTime?
+  createdAt        DateTime         @default(now())
+
+  @@index([userId, readAt, createdAt])
+  @@index([relatedClaimId])
+  @@index([relatedListingId])
+}
+
 model RefreshToken {
   id        String    @id @default(uuid())
   userId    String
@@ -95,6 +138,18 @@ model RefreshToken {
   tokenHash String    @unique
   expiresAt DateTime
   revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
   createdAt DateTime  @default(now())
 
   @@index([userId])

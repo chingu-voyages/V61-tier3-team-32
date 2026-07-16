@@ -50,21 +50,23 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  const register = useCallback(async ({ name, email, password, role }) => {
-    const { data } = await api.post("/auth/register", {
+  const register = useCallback(async ({ name, email, password, role, city, businessName }) => {
+    const { data } = await api.post("/auth/signup", {
       name,
       email,
       password,
       role,
+      city,
+      businessName: businessName || null,
     });
-    setAccessToken(data.accessToken);
+    setAccessToken(data.token);
     setUser(data.user);
     return data.user;
   }, []);
 
   const login = useCallback(async ({ email, password }) => {
     const { data } = await api.post("/auth/login", { email, password });
-    setAccessToken(data.accessToken);
+    setAccessToken(data.token);
     setUser(data.user);
     return data.user;
   }, []);
@@ -78,6 +80,10 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const updateUser = useCallback((updatedFields) => {
+    setUser((prev) => prev ? { ...prev, ...updatedFields } : prev);
+  }, []);
+
   const value = {
     user,
     isAuthenticated: Boolean(user),
@@ -85,6 +91,7 @@ export function AuthProvider({ children }) {
     register,
     login,
     logout,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -8,11 +8,27 @@ const specs = require("./swagger");
 
 const app = express();
 
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  process.env.FRONTEND_URL,
+  "https://foodrescue-deploy-client.vercel.app",
+  "https://foodrescue-deploy-server.vercel.app",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:3000",
+].filter(Boolean);
+
 // Enable CORS for frontend
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
-    methods: ["GET", "POST", "PATCH", "DELETE"],
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || /https:\/\/.*\.vercel\.app$/i.test(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,
   }),
 );
@@ -97,6 +113,8 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/listings', require('./routes/listings'));
 app.use('/api/claims', require('./routes/claims'));
 app.use('/api/stats', require('./routes/stats'));
+app.use('/api/donors', require('./routes/donors'));
+app.use('/api/notifications', require('./routes/notifications'));
 // app.use('/api/users', require('./routes/users'));
 
 if (process.env.NODE_ENV !== "production") {

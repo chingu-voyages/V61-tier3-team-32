@@ -57,7 +57,7 @@ export default function CommunitiesSection({ onBrowseFeed, onPostFoodNow }) {
               Got food that won't be eaten<br className="hidden md:block" /> tonight?
             </h3>
             <p className="text-white/90 mb-10 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed">
-              Post it in two minutes. Someone nearby will be grateful — and the planet will breathe a little easier.
+              Post it in two minutes. Someone nearby will be grateful and the planet will breathe a little easier.
             </p>
             {!isAuthenticated && (
               <div className="flex flex-col sm:flex-row justify-center items-center gap-4">

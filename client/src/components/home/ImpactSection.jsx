@@ -4,22 +4,22 @@ export default function ImpactSection() {
   const stats = [
     {
       icon: <UtensilsCrossed className="w-6 h-6 text-primary" />,
-      number: "12,480",
+      number: "1,480",
       label: "Meals rescued"
     },
     {
       icon: <Leaf className="w-6 h-6 text-primary" />,
-      number: "4,320 kg",
+      number: "420 kg",
       label: "Food saved"
     },
     {
       icon: <Users className="w-6 h-6 text-primary" />,
-      number: "286",
+      number: "86",
       label: "Active donors"
     },
     {
       icon: <HandHeart className="w-6 h-6 text-primary" />,
-      number: "98%",
+      number: "90%",
       label: "Pickup success"
     }
   ];
@@ -38,7 +38,7 @@ export default function ImpactSection() {
             <p className="text-lg text-mid-gray mb-10 leading-relaxed">
               Together, the FoodRescue community across Nigeria has stopped thousands of kilograms of food from being wasted, and turned it into meals for the people next door.
             </p>
-            <button className="flex items-center gap-2 bg-primary hover:bg-opacity-90 text-white px-6 py-3.5 rounded-xl font-medium shadow-sm transition">
+            <button className="hidden flex items-center gap-2 bg-primary hover:bg-opacity-90 text-white px-6 py-3.5 rounded-xl font-medium shadow-sm transition ">
               See full impact
               <ArrowRight size={20} />
             </button>

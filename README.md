@@ -57,3 +57,5 @@ FoodRescue is a real-time platform that connects **food donors** (restaurants, b
 - Bathshua: [GitHub](https://github.com/Awsomgal) / [LinkedIn]( https://linkedin.com/in/bathshuabradley/)
 
 
+## Project live url
+https://foodrescue-deploy-client.vercel.app/

@@ -12,7 +12,7 @@ FoodRescue is a real-time platform that connects **food donors** (restaurants, b
 - **Database**: PostgreSQL + Prisma (Hosted on Supabase)
 - **Authentication**: Custom JWT + bcrypt
 - **Real-time**: Supabase Realtime
-- **Maps**: Leaflet.js
+<!-- - **Maps**: Leaflet.js -->
 - **File Uploads**: Cloudinary
 
 ## Local Setup
@@ -48,12 +48,12 @@ FoodRescue is a real-time platform that connects **food donors** (restaurants, b
    - Server runs on `http://localhost:5000`
 
 ## The Team
-- Daniele Kafriyie: [GitHub](https://github.com/dk-afriyie) / [LinkedIn](https://linkedin.com/in/danielkafriyie/)
+- Daniele Afriyie: [GitHub](https://github.com/dk-afriyie) / [LinkedIn](https://linkedin.com/in/danielkafriyie/)
 - Jonathan: [GitHub](https://github.com/jnini2076e)  / [LinkedIn](www.linkedin.com/in/jonathan-padilla7/)
 - David Akanang: [GitHub](https://github.com/DavidBugger) / [LinkedIn](https://linkedin.com/in/david-akanang-0789771a4)
 - Anderson Osayerie: [GitHub](https://github.com/andersonosayerie) / [LinkedIn](https://linkedin.com/in/anderson-osayerie)
 - Ruthigwe Oruta: [GitHub](https://github.com/Xondacc) / [LinkedIn](https://linkedin.com/in/ruthigwe-oruta)
 - Alwin Puche: [GitHub](https://github.com/awyyyn) / [LinkedIn](https://linkedin.com/in/alwin-puche-7295851b7/)
-- Bathshua: [GitHub](https://github.com/bathshuabradley) / [LinkedIn](https://linkedin.com/in/Awsomgal/)
+- Bathshua: [GitHub](https://github.com/Awsomgal) / [LinkedIn]( https://linkedin.com/in/bathshuabradley/)
 
 

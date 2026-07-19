@@ -67,23 +67,8 @@ const resolveCoords = async (user) => {
     return { lat: user.latitude, lng: user.longitude };
   }
 
-  // Otherwise try browser geolocation
-  return new Promise((resolve) => {
-    if (!navigator.geolocation) {
-      resolve({});
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        resolve({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        });
-      },
-      () => resolve({}),
-      { timeout: 3000, enableHighAccuracy: false },
-    );
-  });
+  // Disable browser geolocation prompt as requested
+  return {};
 };
 
 // Main Dashboard Component

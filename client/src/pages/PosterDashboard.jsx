@@ -64,6 +64,7 @@ function ListingCard({
   const isClaimed = listing.status === "claimed";
   const expiryLabel = formatExpiry(listing.expiresAt);
   const expiringSoon = isExpiringSoon(listing.expiresAt);
+  const isExpired = listing.status === "expired" || expiryLabel === "Expired";
 
   const quantityIcon =
     listing.category === "Hot Meal" ? (
@@ -89,11 +90,14 @@ function ListingCard({
         )}
 
         <span
-          className={`absolute top-3 left-3 text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-md ${
-            isClaimed ? "bg-blue-500/90 text-white" : "bg-primary/90 text-white"
-          }`}
+          className={`absolute top-3 left-3 text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-md ${isClaimed
+            ? "bg-blue-500/90 text-white"
+            : isExpired
+              ? "bg-red-500/90 text-white"
+              : "bg-primary/90 text-white"
+            }`}
         >
-          {isClaimed ? "Claimed" : "Active"}
+          {isClaimed ? "Claimed" : isExpired ? "Expired" : "Active"}
         </span>
       </div>
 
@@ -401,11 +405,10 @@ export default function PosterDashboard() {
                 <button
                   key={f}
                   onClick={() => setActiveFilter(f)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${
-                    activeFilter === f
-                      ? "bg-primary text-white shadow-sm"
-                      : "text-mid-gray hover:text-dark"
-                  }`}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${activeFilter === f
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-mid-gray hover:text-dark"
+                    }`}
                 >
                   {f}
                 </button>

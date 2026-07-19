@@ -12,6 +12,7 @@ export default function ListingDetailsModal({
   if (!isOpen || !listing) return null;
 
   const isClaimed = listing.status === 'claimed';
+  const isExpired = listing.status === 'expired' || (listing.expiresAt && new Date(listing.expiresAt).getTime() <= Date.now());
   const categoryLabel =
     listing.category === 'Hot Meal'
       ? 'Hot Meal'
@@ -67,8 +68,8 @@ export default function ListingDetailsModal({
           </button>
 
           {/* Status Badge */}
-          <span className="absolute top-4 left-4 text-[11px] font-bold tracking-widest uppercase px-3 py-1 rounded-full bg-emerald-500 text-white flex items-center gap-1">
-            ◆ {isClaimed ? 'CLAIMED' : 'ACTIVE'}
+          <span className={`absolute top-4 left-4 text-[11px] font-bold tracking-widest uppercase px-3 py-1 rounded-full ${isClaimed ? 'bg-blue-500 text-white' : isExpired ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'} flex items-center gap-1`}>
+            ◆ {isClaimed ? 'CLAIMED' : isExpired ? 'EXPIRED' : 'ACTIVE'}
           </span>
 
           {/* Category Badge - positioned below status */}

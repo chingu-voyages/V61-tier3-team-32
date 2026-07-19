@@ -202,39 +202,47 @@ function AppShell() {
 
   const teamMembers = [
     {
-      name: "Ruthigwe Oruta",
-      github: "https://github.com/Xondacc",
-      linkedin: "https://linkedin.com/in/ruthigwe-oruta",
+      name: "Anderson Osayerie",
+      github: "https://github.com/andersonosayerie",
+      linkedin: "https://linkedin.com/in/anderson-osayerie",
     },
-    {
-      name: "Daniele Kafriyie",
-      github: "https://github.com/dk-afriyie",
-      linkedin: "https://linkedin.com/in/danielkafriyie/",
-    },
+
     {
       name: "David Akanang",
       github: "https://github.com/DavidBugger",
       linkedin: "https://linkedin.com/in/david-akanang-0789771a4",
     },
-    {
-      name: "Bathshua",
-      github: "https://github.com/bathshuabradley",
-      linkedin: "https://linkedin.com/in/Awsomgal/",
-    },
+
+
     {
       name: "Alwin Puche",
       github: "https://github.com/awyyyn",
       linkedin: "https://linkedin.com/in/alwin-puche-7295851b7/",
     },
+
+
+
     {
-      name: "Anderson Osayerie",
-      github: "https://github.com/andersonosayerie",
-      linkedin: "https://linkedin.com/in/anderson-osayerie",
+      name: "Bathshua",
+      github: "https://github.com/Awsomgal",
+      linkedin: "https://linkedin.com/in/bathshuabradley/",
     },
+    {
+      name: "Ruthigwe Oruta",
+      github: "https://github.com/Xondacc",
+      linkedin: "https://linkedin.com/in/ruthigwe-oruta",
+    },
+
     {
       name: "Jonathan",
       github: "https://github.com/jnini2076e",
       linkedin: "https://www.linkedin.com/in/jonathan-padilla7/",
+    },
+
+    {
+      name: "Daniel Afriyie",
+      github: "https://github.com/dk-afriyie",
+      linkedin: "https://linkedin.com/in/danielkafriyie/",
     },
   ];
 
@@ -512,8 +520,8 @@ function AppShell() {
       <button
         onClick={scrollToTop}
         className={`fixed bottom-8 right-8 bg-primary text-white p-3 rounded-full shadow-lg hover:bg-opacity-90 transition-all z-50 ${showScrollTop
-            ? "opacity-100 translate-y-0"
-            : "opacity-0 translate-y-4 pointer-events-none"
+          ? "opacity-100 translate-y-0"
+          : "opacity-0 translate-y-4 pointer-events-none"
           }`}
         aria-label="Back to top"
       >

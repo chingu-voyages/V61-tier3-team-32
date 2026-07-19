@@ -154,7 +154,7 @@ export default function DonorProfile() {
 
             {/* Action buttons */}
             <div className="flex items-center gap-3">
-              {isOwner ? (
+              {isOwner && (
                 <Link
                   to="/settings"
                   className="px-5 py-2 border-2 border-primary text-primary rounded-lg hover:bg-green-50 font-semibold flex items-center gap-2 transition"
@@ -162,11 +162,6 @@ export default function DonorProfile() {
                   <Settings size={16} />
                   Edit Profile
                 </Link>
-              ) : (
-                <button className="px-6 py-2 border-2 border-gray-900 text-gray-900 rounded-lg hover:bg-gray-50 font-semibold flex items-center gap-2">
-                  <MessageCircle size={18} />
-                  Message
-                </button>
               )}
             </div>
           </div>
@@ -261,9 +256,15 @@ export default function DonorProfile() {
                       <p className="text-sm text-gray-600">
                         {listing.quantity} {listing.quantity === 1 ? 'item' : 'items'} left
                       </p>
-                      <p className="text-xs font-semibold text-orange-600 mt-1">
-                        Expires in {Math.ceil((new Date(listing.expiresAt) - new Date()) / (1000 * 60 * 60))}h
-                      </p>
+                      {new Date(listing.expiresAt) > new Date() ? (
+                        <p className="text-xs font-semibold text-orange-600 mt-1">
+                          Expires in {Math.ceil((new Date(listing.expiresAt) - new Date()) / (1000 * 60 * 60))}h
+                        </p>
+                      ) : (
+                        <p className="text-xs font-semibold text-red-600 mt-1">
+                          Expired
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}

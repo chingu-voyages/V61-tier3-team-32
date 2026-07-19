@@ -175,6 +175,11 @@ export default function PostFoodForm() {
       return;
     }
 
+    if (new Date(form.pickupStart) < new Date()) {
+      setError('Pickup start time cannot be in the past.');
+      return;
+    }
+
     if (new Date(form.pickupEnd) <= new Date(form.pickupStart)) {
       setError('Pickup end time must be after the start time.');
       return;
@@ -341,6 +346,7 @@ export default function PostFoodForm() {
                 name="pickupStart"
                 type="datetime-local"
                 value={form.pickupStart}
+                min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
                 onChange={handleChange}
                 className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 focus:border-green-300 focus:outline-none"
               />
@@ -351,6 +357,7 @@ export default function PostFoodForm() {
                 name="pickupEnd"
                 type="datetime-local"
                 value={form.pickupEnd}
+                min={form.pickupStart || new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
                 onChange={handleChange}
                 className="mt-2 w-full rounded-2xl border border-gray-200 px-4 py-3 focus:border-green-300 focus:outline-none"
               />

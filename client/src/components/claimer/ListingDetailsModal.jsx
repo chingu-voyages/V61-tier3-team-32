@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import {
   X,
   Users,
@@ -34,6 +35,8 @@ export default function ListingDetailsModal({
     listing.expiresAt ?? listing.expiryTime,
   );
 
+  const isExpired = listing.status === 'expired' || (listing.expiresAt && new Date(listing.expiresAt).getTime() <= Date.now());
+
   const formatWindowTime = (iso) => {
     if (!iso) return null;
     return new Date(iso).toLocaleTimeString([], {
@@ -59,20 +62,20 @@ export default function ListingDetailsModal({
   const isVerified = listing.donor?.rating != null || listing.verified;
   const postedAgo = listing.createdAt
     ? (() => {
-        const diff = Math.round(
-          (Date.now() - new Date(listing.createdAt)) / 60000,
-        );
-        if (diff < 60) return `${diff} minute${diff !== 1 ? "s" : ""} ago`;
-        const h = Math.round(diff / 60);
-        return `${h} hour${h !== 1 ? "s" : ""} ago`;
-      })()
+      const diff = Math.round(
+        (Date.now() - new Date(listing.createdAt)) / 60000,
+      );
+      if (diff < 60) return `${diff} minute${diff !== 1 ? "s" : ""} ago`;
+      const h = Math.round(diff / 60);
+      return `${h} hour${h !== 1 ? "s" : ""} ago`;
+    })()
     : null;
 
   const statusBadge = viewOnly
     ? CLAIM_STATUS_DISPLAY[claimStatus] || {
-        label: claimStatus || "Active",
-        className: "bg-primary text-white",
-      }
+      label: claimStatus || "Active",
+      className: "bg-primary text-white",
+    }
     : null;
 
   return (
@@ -103,8 +106,8 @@ export default function ListingDetailsModal({
                 {statusBadge.label}
               </span>
             ) : (
-              <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold text-white uppercase tracking-wide shadow">
-                Active
+              <span className={`rounded-full ${isExpired ? 'bg-red-500' : 'bg-primary'} px-3 py-1 text-xs font-bold text-white uppercase tracking-wide shadow`}>
+                {isExpired ? 'Expired' : 'Active'}
               </span>
             )}
             {listing.category && (
@@ -136,12 +139,12 @@ export default function ListingDetailsModal({
               {listing.businessName ? <p>{listing.businessName}</p> : null}
             </div>
             {listing.donorId && (
-              <a
-                href={`/donors/${listing.donorId}`}
+              <Link
+                to={`/donor/${listing.donorId}`}
                 className="flex-shrink-0 flex items-center gap-1 text-xs sm:text-sm font-semibold text-primary hover:underline whitespace-nowrap"
               >
                 View profile <ArrowRight className="h-4 w-4" />
-              </a>
+              </Link>
             )}
           </div>
 

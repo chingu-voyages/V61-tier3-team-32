@@ -48,7 +48,7 @@ FoodRescue is a real-time platform that connects **food donors** (restaurants, b
    - Server runs on `http://localhost:5000`
 
 ## The Team
-- Daniele Afriyie: [GitHub](https://github.com/dk-afriyie) / [LinkedIn](https://linkedin.com/in/danielkafriyie/)
+- Daniel Afriyie: [GitHub](https://github.com/dk-afriyie) / [LinkedIn](https://linkedin.com/in/danielkafriyie/)
 - Jonathan: [GitHub](https://github.com/jnini2076e)  / [LinkedIn](www.linkedin.com/in/jonathan-padilla7/)
 - David Akanang: [GitHub](https://github.com/DavidBugger) / [LinkedIn](https://linkedin.com/in/david-akanang-0789771a4)
 - Anderson Osayerie: [GitHub](https://github.com/andersonosayerie) / [LinkedIn](https://linkedin.com/in/anderson-osayerie)
